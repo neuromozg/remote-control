@@ -8,8 +8,8 @@ import time
 
 """ Для того, чтобы единожды задать ip и порт, расскоментируйте следующие строки и запишите в них
  правильные значения ip и порта """
-#IP = "127.0.0.1"
-#PORT = 5005
+# IP = "127.0.0.1"
+# PORT = 5005
 
 """ Управляющие клавиши """
 controlKeyMap = {
@@ -17,7 +17,29 @@ controlKeyMap = {
     "moveBackward": ["s", "S", "ы", "Ы"],
     "rotateLeft": ["a", "A", "ф", "Ф"],
     "rotateRight": ["d", "D", "в", "В"],
+    "addSpeed": ["X", "x", "ч", "Ч"],
+    "subSpeed": ["Z", "z", "я", "Я"],
+    "changePlowState": ["J", "j", "о", "О"],
+    "changePlantStateFlag": ["H", "h", "р", "Р"],
+    "bucketMoveUp": ["R", "r", "к", "К"],
+    "bucketMoveDown": ["F", "f", "а", "А"],
+    "grabClamp": ["I", "i", "ш", "Ш"],
+    "grabLoose": ["U", "u", "г", "Г"]
 }
+
+
+def info():
+    print("Для управления используйте следующие клавиши на клавиатуре:")
+    print("\tW - двигаться вперед (удерживайте)")
+    print("\tS - двигаться назад (удерживайте)")
+    print("\tA - поворот влево (удерживайте)")
+    print("\tD - поворот вправо (удерживайте)")
+    print("\tJ - поднять/опустить плуг")
+    print("\tH - посадить картошку")
+    print("\tR - поднять ковш (удерживайте)")
+    print("\tF - опустить ковш (удерживайте)")
+    print("\tI - сжать схват (удерживайте)")
+    print("\tU - отпустить схват (удерживайте)")
 
 
 def crc16(data: bytes, poly=0x8408):
@@ -57,24 +79,34 @@ def checkHost(host):
 
 class RemoteRobot:
     """ Класс - обертка для работы с удаленным роботом """
+
     def __init__(self):
         self.__ip = None
         self.__port = None
         self.__sock = None
-        self.__packageFormat = "=bb"    # |(b) int8 - move speed [-100,100]|(b) int8 - rotate speed [-100, 100]|
+        self.__packageFormat = "=bbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
+        #   || (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
+        # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
+        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||
         self.__isConnected = False  # флаг подключения
-        self.__speed = 50   # диапазон - [0, 100]
-        self.__moveDirection = 0    # Направление движения робота: -1, 0, 1
+        self.__speed = 50  # диапазон - [0, 100]
+        self.__speedAddStep = 20  # шаг с которым может меняться скорость
+        self.__moveDirection = 0  # Направление движения робота: -1, 0, 1
         self.__rotateDirection = 0  # Направление поворота робота: -1, 0, 1
+        self.__plowState = False  # Состояние плуга: False - убран, True - опущен
+        self.__plantStateFlag = False  # Флаг активации диспенсора при True - активируется, False - сброс флага
+        self.__bucketPosition = 0  # Позиция ковша, диапазон - [-100, 100]
+        self.__grabPosition = 0  # Позиция схвата, диапазон - [-100, 100]
+        self.__positionChangeStep = 1  # Шаг изменения позиций при зажатии клавиш управения
 
     def connect(self, ip, port):
         print("Пробую подключиться к роботу {host}".format(host=ip + ':' + port.__str__()))
         self.__ip = ip
         self.__port = port
-        self.__connectKeyboard()    # запускаем поток опроса клавиатуры
+        self.__connectKeyboard()  # запускаем поток опроса клавиатуры
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # создаем сокет
         self.__sock.connect((self.__ip, self.__port))
-        threading.Thread(target=self.__sendThread, daemon=True).start()     # запуск потока отправки
+        threading.Thread(target=self.__sendThread, daemon=True).start()  # запуск потока отправки
         print("Пакеты к {host} начали отправляться, проверьте состояние"
               " подключения через трансляцию".format(host=ip + ':' + port.__str__()))
         self.__isConnected = True
@@ -95,17 +127,21 @@ class RemoteRobot:
         """ поток переодической отправки пакетов """
         while True:
             if self.isConnected:
-                package = b''   # стартовые байты
-                moveSpeed = int(self.__moveDirection * self.__speed)    # пересчет скорости движения
-                rotateSpeed = int(self.__rotateDirection * self.__speed)    # пересчет скорости поворота
-                data = struct.pack(self.__packageFormat, moveSpeed, rotateSpeed)    # упаковка параметров управления
-                crc = struct.pack('=H', crc16(data))     # избыточный код
-                package += crc + data   # объединение частей пакета
-                self.__sock.send(package)   # отправка пакета
+                package = b''  # стартовые байты
+                moveSpeed = int(self.__moveDirection * self.__speed)  # пересчет скорости движения
+                rotateSpeed = int(self.__rotateDirection * self.__speed)  # пересчет скорости поворота
+                data = struct.pack(self.__packageFormat,
+                                   moveSpeed, rotateSpeed,
+                                   self.__bucketPosition, self.__grabPosition,
+                                   self.__plowState, self.__plantStateFlag)  # упаковка параметров управления
+                crc = struct.pack('=H', crc16(data))  # избыточный код
+                package += crc + data  # объединение частей пакета
+                self.__sock.send(package)  # отправка пакета
             time.sleep(0.1)
 
     def __connectKeyboard(self):
         """ привязка обработчиков кнопок клавиатуры """
+
         def onPress(key):
             global controlKeyMap
             try:
@@ -117,6 +153,20 @@ class RemoteRobot:
                     self.__rotateDirection = 1
                 elif key.char in controlKeyMap["rotateLeft"]:
                     self.__rotateDirection = -1
+
+                elif key.char in controlKeyMap["changePlantStateFlag"]:
+                    self.__plantStateFlag = True  # при зажатой клавише всегда отправляется True
+
+                elif key.char in controlKeyMap["bucketMoveUp"]:
+                    self.__bucketPosition = min(max(-100, self.__bucketPosition + self.__positionChangeStep), 100)
+                elif key.char in controlKeyMap["bucketMoveDown"]:
+                    self.__bucketPosition = min(max(-100, self.__bucketPosition - self.__positionChangeStep), 100)
+
+                elif key.char in controlKeyMap["grabClamp"]:
+                    self.__grabPosition = min(max(-100, self.__grabPosition + self.__positionChangeStep), 100)
+                elif key.char in controlKeyMap["grabLoose"]:
+                    self.__grabPosition = min(max(-100, self.__grabPosition - self.__positionChangeStep), 100)
+
             except AttributeError:
                 pass
 
@@ -125,8 +175,20 @@ class RemoteRobot:
             try:
                 if (key.char in controlKeyMap["moveForward"]) or (key.char in controlKeyMap["moveBackward"]):
                     self.__moveDirection = 0
-                if (key.char in controlKeyMap["rotateRight"]) or (key.char in controlKeyMap["rotateLeft"]):
+                elif (key.char in controlKeyMap["rotateRight"]) or (key.char in controlKeyMap["rotateLeft"]):
                     self.__rotateDirection = 0
+
+                elif key.char in controlKeyMap["addSpeed"]:
+                    self.addToSpeed(self.__speedAddStep)
+                elif key.char in controlKeyMap["subSpeed"]:
+                    self.addToSpeed(-self.__speedAddStep)
+
+                elif key.char in controlKeyMap["changePlowState"]:
+                    self.__plowState = not self.__plowState
+
+                elif key.char in controlKeyMap["changePlantStateFlag"]:
+                    self.__plantStateFlag = False
+
             except AttributeError:
                 pass
 
@@ -152,6 +214,7 @@ if __name__ == '__main__':
                         if checkHost((ip, port)) is False:
                             continue
                         robot.connect(ip, int(port))
+                        info()
                 except Exception as e:
                     print("Произошла ошибка при подключении: ", str(e))
             time.sleep(1)
