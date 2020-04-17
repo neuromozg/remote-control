@@ -20,12 +20,6 @@ class Registers:
     REG_BEEP = 0x0A
 
 
-class Direction:
-    """ Класс, хранящий возможные направления """
-    FORWARD = 0x00  # вперед
-    BACKWARD = 0x01  # назад
-
-
 class Pigrabot:
     def __init__(self, bus, addr=0x27):
         self._bus = bus  # шина i2c
@@ -45,16 +39,16 @@ class Pigrabot:
         """ Устанавливает направление вращения мотора 1 """
         self._bus.write_byte_data(self._addr, Registers.REG_DIR_1, direction)
 
-    def setPwm0(self, direction, pwm):
+    def setPwm0(self, pwm):
         """ Устанавливает скорость через параметры шима """
         pwm = min(max(-255, pwm), 255)  # проверяем значение pwm
-        self._setDirection0(direction)
+        self._setDirection0(int(pwm > 0))
         self._bus.write_byte_data(self._addr, Registers.REG_PWM_0, abs(pwm))
 
-    def setPwm1(self, direction, pwm):
+    def setPwm1(self, pwm):
         """ Устанавливает скорость через параметры шима """
         pwm = min(max(-255, pwm), 255)  # проверяем значение pwm
-        self._setDirection1(direction)
+        self._setDirection1(int(pwm > 0))
         self._bus.write_byte_data(self._addr, Registers.REG_PWM_1, abs(pwm))
 
     def setServo0(self, pos):

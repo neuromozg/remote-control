@@ -5,6 +5,10 @@ import struct
 import sys
 import time
 
+import smbus
+
+from robot import pigrabot
+
 SELF_IP = "10.1.0.88"
 SELF_PORT = 5005
 
@@ -35,18 +39,22 @@ def crc16(data: bytes, poly=0x8408):
     return crc & 0xFFFF
 
 
-class Robot:
-    def __init__(self):
-        pass
+class Agrobot:
+    def __init__(self, bus, addr=0x27):
+        self._bot = pigrabot.Pigrabot(bus, addr)
+        self._servoMiddlePos = 125 // 2
+        self._plowStates = [self._servoMiddlePos, 70]
 
     def move(self, speed):
-        print("move: ", speed)
+        self._bot.setPwm0(int(speed * 2.55))  # [-100;100] -> [-255;255]
+        self._bot.setPwm1(-int(speed * 2.55))  # [-100;100] -> [-255;255]
 
     def rotate(self, speed):
-        print("rotate: ", speed)
+        self._bot.setPwm0(int(speed * 2.55))  # [-100;100] -> [-255;255]
+        self._bot.setPwm1(int(speed * 2.55))  # [-100;100] -> [-255;255]
 
     def changePlowState(self, state):
-        print("plow state: ", state)
+        self._bot.setServo0(self._plowStates[int(state)])
 
     def activatePlant(self, activator):
         if activator:
@@ -58,10 +66,14 @@ class Robot:
     def grabPosition(self, position):
         print("grab position:  ", position)
 
+    def exit(self):
+        self._bot.exit()
+
 
 if __name__ == '__main__':
     try:
-        robot = Robot()
+        bus = smbus.SMBus(1)
+        robot = Agrobot(bus)
         previousStates = [None, None, None, None, None, None]
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(3.0)
@@ -90,4 +102,6 @@ if __name__ == '__main__':
             except socket.timeout:
                 time.sleep(1)
     except KeyboardInterrupt:
+        robot.exit()
+        time.sleep(1)
         sys.exit()
