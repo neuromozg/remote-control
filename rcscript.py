@@ -8,8 +8,8 @@ import time
 
 """ Для того, чтобы единожды задать ip и порт, расскоментируйте следующие строки и запишите в них
  правильные значения ip и порта """
-#IP = "127.0.0.2"
-#PORT = 5007
+# IP = "127.0.0.1"
+# PORT = 5005
 
 """ Управляющие клавиши """
 controlKeyMap = {
@@ -84,6 +84,7 @@ class RemoteRobot:
         self.__ip = None
         self.__port = None
         self.__sock = None
+        self.__key = None
         self.__packageFormat = "=bbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
         #   || (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
@@ -99,10 +100,11 @@ class RemoteRobot:
         self.__grabPosition = 0  # Позиция схвата, диапазон - [-100, 100]
         self.__positionChangeStep = 1  # Шаг изменения позиций при зажатии клавиш управения
 
-    def connect(self, ip, port):
+    def connect(self, ip, port, key):
         print("Пробую подключиться к роботу {host}".format(host=ip + ':' + port.__str__()))
         self.__ip = ip
         self.__port = port
+        self.__key = key
         self.__connectKeyboard()  # запускаем поток опроса клавиатуры
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # создаем сокет
         self.__sock.connect((self.__ip, self.__port))
@@ -135,7 +137,8 @@ class RemoteRobot:
                                    self.__bucketPosition, self.__grabPosition,
                                    self.__plowState, self.__plantStateFlag)  # упаковка параметров управления
                 crc = struct.pack('=H', crc16(data))  # избыточный код
-                package += crc + data  # объединение частей пакета
+                key = struct.pack('=H', self.__key)
+                package += crc + key + data  # объединение частей пакета
                 self.__sock.send(package)  # отправка пакета
             time.sleep(0.1)
 
@@ -204,8 +207,10 @@ if __name__ == '__main__':
         while True:
             if not robot.isConnected:
                 try:
+                    print("Введите ключ: ")
+                    key = int(input().replace(' ', ''))
                     if ('IP' in globals()) and ('PORT' in globals()):
-                        robot.connect(IP, PORT)
+                        robot.connect(IP, PORT, key)
                     else:
                         print("Введите IP: ")
                         ip = input().replace(' ', '')
@@ -213,7 +218,7 @@ if __name__ == '__main__':
                         port = input().replace(' ', '')
                         if checkHost((ip, port)) is False:
                             continue
-                        robot.connect(ip, int(port))
+                        robot.connect(ip, int(port), key)
                         info()
                 except Exception as e:
                     print("Произошла ошибка при подключении: ", str(e))
@@ -223,3 +228,4 @@ if __name__ == '__main__':
             robot.disconnect()
         time.sleep(1)
         print("Работа программы успешно завершена")
+        exit()
