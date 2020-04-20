@@ -16,9 +16,9 @@ servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
 #plowStates = [middleServoPos, 70]
-plantStates = [middleServoPos, 70]
-grabLimits = [0, 125]
-bucketLimits = [0, 125]
+plantStates = [middleServoPos, middleServoPos]
+grabLimits = [25, 80]
+bucketLimits = [0, 100]
 
 plantActivateFlag = False  # флаг - активирована ли посадка
 
@@ -55,12 +55,14 @@ def activatePlant(activator):
 
 
 def bucketPosition(position):
+    position = -position
     position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
     position = min(max(bucketLimits[0], position), bucketLimits[1])
     robot.setServo2(position)
 
 
 def grabPosition(position):
+    position = -position
     position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
     position = min(max(grabLimits[0], position), grabLimits[1])
     robot.setServo3(position)
