@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import socket
-import struct
-import sys
 import time
-
 import smbus
 import pigrabot
 
 SELF_IP = "10.1.0.88"
 SELF_PORT = 5005
+# KEY = 6006    # если закомментировано - генерируется автоматически
 
-bus = smbus.SMBus(1)
-robot = pigrabot.Pigrabot(bus)
+bus = None
+robot = None
 
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
@@ -48,6 +45,8 @@ def grabPosition(position):
 
 
 def initializeAll():
+    bus = smbus.SMBus(1)
+    robot = pigrabot.Pigrabot(bus)
     robot.online = True
     robot.start()
     robot.setPwm0(0)
