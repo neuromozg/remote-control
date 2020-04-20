@@ -3,6 +3,7 @@
 import time
 import smbus
 import pigrabot
+import threading
 
 SELF_IP = "10.1.0.86"
 SELF_PORT = 5008
@@ -14,7 +15,12 @@ robot = None
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
-plowStates = [middleServoPos, 70]
+#plowStates = [middleServoPos, 70]
+plantStates = [middleServoPos, 70]
+grabLimits = [0, 125]
+bucketLimits = [0, 125]
+
+plantActivateFlag = False  # флаг - активирована ли посадка
 
 
 def move(speed):
@@ -28,20 +34,36 @@ def rotate(speed):
 
 
 def changePlowState(state):
-    robot.setServo0(plowStates[int(state)])
+    pass
+    #robot.setServo1(plowStates[int(state)])
 
 
 def activatePlant(activator):
-    if activator:
-        print("plant activated")
+    global plantActivateFlag
+
+    def _actPlant():
+        global plantActivateFlag
+        a, b = plantStates
+        for pos in range(a, b, int(a < b) * 2 - 1):
+            robot.setPwm0(pos)
+            time.sleep(0.05)
+        plantActivateFlag = False
+
+    if activator and not plantActivateFlag:
+        threading.Thread(target=_actPlant, daemon=True).start()
+        plantActivateFlag = True
 
 
 def bucketPosition(position):
-    print("bucket position:  ", position)
+    position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
+    position = min(max(bucketLimits[0], position), bucketLimits[1])
+    robot.setServo2(position)
 
 
 def grabPosition(position):
-    print("grab position:  ", position)
+    position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
+    position = min(max(grabLimits[0], position), grabLimits[1])
+    robot.setServo3(position)
 
 
 def initializeAll():
