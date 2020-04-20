@@ -4,8 +4,8 @@ import time
 import smbus
 import pigrabot
 
-SELF_IP = "10.1.0.88"
-SELF_PORT = 5005
+SELF_IP = "10.1.0.86"
+SELF_PORT = 5008
 # KEY = 6006    # если закомментировано - генерируется автоматически
 
 bus = None
@@ -18,8 +18,8 @@ plowStates = [middleServoPos, 70]
 
 
 def move(speed):
-    robot.setPwm0(int(speed * 2.55))  # [-100;100] -> [-255;255]
-    robot.setPwm1(-int(speed * 2.55))  # [-100;100] -> [-255;255]
+    robot.setPwm0(-int(speed * 2.55))  # [-100;100] -> [-255;255]
+    robot.setPwm1(int(speed * 2.55))  # [-100;100] -> [-255;255]
 
 
 def rotate(speed):
@@ -45,6 +45,8 @@ def grabPosition(position):
 
 
 def initializeAll():
+    global robot
+    global bus
     bus = smbus.SMBus(1)
     robot = pigrabot.Pigrabot(bus)
     robot.online = True
@@ -59,3 +61,4 @@ def initializeAll():
 
 def release():
     robot.exit()
+    bus.close()

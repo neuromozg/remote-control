@@ -59,6 +59,7 @@ if __name__ == '__main__':
                 data = data[2:]
                 if nkey == key:
                     if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
+                        config.robot.online = True
                         if data[0] != previousStates[0]:
                             config.move(data[0])
                         if data[1] != previousStates[1]:
@@ -73,7 +74,12 @@ if __name__ == '__main__':
                             config.activatePlant(data[5])
 
                         previousStates = data[:]
+                    else:
+                        print("invalid crc")
+                else:
+                    print("invalid key: ", nkey, "/", key)
             except socket.timeout:
+                config.robot.online = False
                 time.sleep(1)
     except KeyboardInterrupt:
         config.release()
