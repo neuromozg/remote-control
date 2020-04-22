@@ -89,6 +89,8 @@ if __name__ == '__main__':
             logger.error("Хост не задан, введите хост через модификатор [--host] или через файл настроек config.py")
             raise ValueError("Хост не задан")
 
+        config.logger = logger
+
         try:
             logger.debug_0("Попытка инициализации робота")
             config.initializeAll()
@@ -122,7 +124,7 @@ if __name__ == '__main__':
                         if packageNum > actualPackageNum:
                             actualPackageNum = packageNum
                         else:
-                            logger.warning("Старый пакет: " + "Package: crc: {0}, key: {1}, number: {2}, data: {3}".format(*data[:3], data[3:]))
+                            logger.warning("Старый пакет: " + "Package: crc: {0}, key: {1}, number: {2}, data: {3}. Актуальный номер пакета: {4}".format(*data[:3], data[3:], actualPackageNum))
 
                         data = data[3:]
                         config.robot.online = True
