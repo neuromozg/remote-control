@@ -43,7 +43,6 @@ if __name__ == '__main__':
     parser.add_argument("-k", help="Ручной ввод ключа", type=int)
     parser.add_argument("--host", help="Ручной ввод хоста. Формат ввода ip:port", type=str)
     args = parser.parse_args()
-    print(args)
     logger = robologger.robologger
     level = robologger.logging.INFO
     if args.v == 0:
@@ -73,6 +72,7 @@ if __name__ == '__main__':
         if args.host is not None:
             try:
                 ip, port = args.host.replace(' ', '').split(':')
+                port = int(port)
                 logger.debug_0("Хост введен через модификатор: {host}".format(host=args.host))
             except Exception as e:
                 logger.error("Неверный формат введенного хоста: {e}".format(e=e.__str__()))
@@ -80,6 +80,7 @@ if __name__ == '__main__':
         elif config.__dict__.get("SELF_HOST") is not None:
             try:
                 ip, port = config.SELF_HOST.replace(' ', '').split(':')
+                port = int(port)
                 logger.debug_0("Хост взят из файла настроек config.py: {host}".format(host=config.SELF_HOST))
             except Exception as e:
                 logger.error("Неверный формат хоста: {e}".format(e=e.__str__()))
@@ -89,9 +90,9 @@ if __name__ == '__main__':
             raise ValueError("Хост не задан")
 
         try:
-            logger.debug_1("Попытка инициализации робота")
+            logger.debug_0("Попытка инициализации робота")
             config.initializeAll()
-            logger.debug_1("Попытка инициализации робота прошла успешно")
+            logger.debug_0("Попытка инициализации робота прошла успешно")
         except:
             sys.exit(1)
 
@@ -100,14 +101,14 @@ if __name__ == '__main__':
             sock.settimeout(3.0)
             sock.bind((ip, port))
         except Exception as e:
-            logger.error("Ошибка подключения: {e}".format(e=e))
+            logger.error("Ошибка инициализации сервера: {e}".format(e=e))
             sys.exit(1)
 
         logger.info("Сервер на роботе запущен: {ip}:{port}".format(ip=ip, port=port))
         logger.info("Ключ подключения: {key}".format(key=key))
 
         previousStates = [None, None, None, None, None, None]
-        actualPackageNum = 0
+        actualPackageNum = -1
         while True:
             try:
                 rawdata, addr = sock.recvfrom(1024)  # buffer size is 1024 bytes
@@ -115,35 +116,35 @@ if __name__ == '__main__':
                 logger.debug_2("Package: crc: {0}, key: {1}, number: {2}, data: {3}".format(*data[:3], data[3:]))
                 crc = data[0]
                 nkey = data[1]
-                packageNum = data[2]
-                pdata = data
-                data = data[3:]
-                if packageNum > actualPackageNum:
-                    actualPackageNum = packageNum
-                    if nkey == key:
-                        if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
-                            config.robot.online = True
-                            if data[0] != previousStates[0]:
-                                config.move(data[0])
-                            if data[1] != previousStates[1]:
-                                config.rotate(data[1])
-                            if data[2] != previousStates[2]:
-                                config.bucketPosition(data[2])
-                            if data[3] != previousStates[3]:
-                                config.grabPosition(data[3])
-                            if data[4] != previousStates[4]:
-                                config.changePlowState(data[4])
-                            if data[5] != previousStates[5]:
-                                config.activatePlant(data[5])
-                            previousStates = data[:]
+                if nkey == key:
+                    if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
+                        packageNum = data[2]
+                        if packageNum > actualPackageNum:
+                            actualPackageNum = packageNum
                         else:
-                            logger.debug_1("Неверная crc-сумма пакета: {ncrc}/{vcrc}".format(ncrc=crc, vcrc=crc16(rawdata[struct.calcsize(__headFormat):])))
+                            logger.warning("Старый пакет: " + "Package: crc: {0}, key: {1}, number: {2}, data: {3}".format(*data[:3], data[3:]))
+
+                        data = data[3:]
+                        config.robot.online = True
+                        if data[0] != previousStates[0]:
+                            config.move(data[0])
+                        if data[1] != previousStates[1]:
+                            config.rotate(data[1])
+                        if data[2] != previousStates[2]:
+                            config.bucketPosition(data[2])
+                        if data[3] != previousStates[3]:
+                            config.grabPosition(data[3])
+                        if data[4] != previousStates[4]:
+                            config.changePlowState(data[4])
+                        if data[5] != previousStates[5]:
+                            config.activatePlant(data[5])
+                        previousStates = data[:]
                     else:
-                        logger.debug_1("Неверный ключ пакета: {nkey}/{vkey}".format(nkey=nkey, vkey=key))
+                        logger.debug_1("Неверная crc-сумма пакета: {ncrc}/{vcrc}".format(ncrc=crc, vcrc=crc16(rawdata[struct.calcsize(__headFormat):])))
                 else:
-                    logger.debug_1("Отброшен пакет: " + "Package: crc: {0}, key: {1}, number: {2}, data: {3}".format(*pdata[:3], pdata[3:]))
+                    logger.debug_1("Неверный ключ пакета: {nkey}/{vkey}".format(nkey=nkey, vkey=key))
             except socket.timeout:
-                logger.debug_1("Тайм-аут приема пакета, ожидание новых пакетов, снятие онлайн метки")
+                logger.debug_0("Тайм-аут приема пакета, ожидание новых пакетов, снятие онлайн метки")
                 config.robot.online = False
                 time.sleep(1)
             except Exception as e:
