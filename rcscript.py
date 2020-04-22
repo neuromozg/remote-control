@@ -34,6 +34,8 @@ def info():
     print("\tS - двигаться назад (удерживайте)")
     print("\tA - поворот влево (удерживайте)")
     print("\tD - поворот вправо (удерживайте)")
+    print("\tX - убавить скорость")
+    print("\tZ - прибавить скорость")
     print("\tJ - поднять/опустить плуг")
     print("\tH - посадить картошку")
     print("\tR - поднять ковш (удерживайте)")
@@ -85,8 +87,9 @@ class RemoteRobot:
         self.__port = None
         self.__sock = None
         self.__key = None
-        self.__packageFormat = "=bbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
-        #   || (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
+        self.__packageFormat = "=Hbbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
+        #   || (H) uint16 - package number [0, 0xFFFF]  ||->
+        # ->|| (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
         # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||
         self.__isConnected = False  # флаг подключения
@@ -127,18 +130,23 @@ class RemoteRobot:
 
     def __sendThread(self):
         """ поток переодической отправки пакетов """
+        packageNum = 0
         while True:
             if self.isConnected:
                 package = b''  # стартовые байты
                 moveSpeed = int(self.__moveDirection * self.__speed)  # пересчет скорости движения
                 rotateSpeed = int(self.__rotateDirection * self.__speed)  # пересчет скорости поворота
                 data = struct.pack(self.__packageFormat,
+                                   packageNum,
                                    moveSpeed, rotateSpeed,
                                    self.__bucketPosition, self.__grabPosition,
                                    self.__plowState, self.__plantStateFlag)  # упаковка параметров управления
                 crc = struct.pack('=H', crc16(data))  # избыточный код
                 key = struct.pack('=H', self.__key)
                 package += crc + key + data  # объединение частей пакета
+                packageNum += 1
+                if packageNum > 0xFFFF:
+                    packageNum = 0
                 self.__sock.send(package)  # отправка пакета
             time.sleep(0.1)
 
@@ -209,7 +217,7 @@ if __name__ == '__main__':
                 try:
                     print("Введите ключ: ")
                     key = int(input().replace(' ', ''))
-                    if key > 0xFFFF:
+                    if (key > 0xFFFF) or (key < 0):
                         raise ValueError("Неверный формат ключа")
                     if ('IP' in globals()) and ('PORT' in globals()):
                         robot.connect(IP, PORT, key)

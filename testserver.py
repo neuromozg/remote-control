@@ -10,7 +10,7 @@ protocolConfig = {
     "checksum": "crc16",
     "formatChecksum": 'H',  # 2 байта
     "formatKey": 'H',
-    "formatData": 'bbbb??'  # 4 байта + 2 байта bool
+    "formatData": 'Hbbbb??'  # 2 байта + 4 байта + 2 байта bool
 }
 
 __headFormat = '=' + protocolConfig["formatChecksum"] + protocolConfig["formatKey"]
@@ -69,9 +69,11 @@ if __name__ == '__main__':
             try:
                 rawdata, addr = sock.recvfrom(1024)  # buffer size is 1024 bytes
                 data = struct.unpack(__packageFormat, rawdata)
+                #print(data)
                 crc = data[0]
                 key = data[1]
-                data = data[2:]
+                packageNum = data[2]
+                data = data[3:]
                 if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
                     if data[0] != previousStates[0]:
                         robot.move(data[0])
