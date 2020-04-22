@@ -217,7 +217,7 @@ if __name__ == '__main__':
                 try:
                     print("Введите ключ: ")
                     key = int(input().replace(' ', ''))
-                    if key > 0xFFFF:
+                    if (key > 0xFFFF) or (key < 0):
                         raise ValueError("Неверный формат ключа")
                     if ('IP' in globals()) and ('PORT' in globals()):
                         robot.connect(IP, PORT, key)
