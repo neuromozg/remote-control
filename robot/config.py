@@ -72,9 +72,11 @@ def activatePlant(activator):
             robot.setServo0(plantStates[1])
             time.sleep(2)
             robot.setServo0(plantStates[0])
+            time.sleep(1)
             plantActivateFlag = False
             log("Посадка деактивирована")
         except Exception as e:
+            plantActivateFlag = False
             err("Ошибка активации посадки: {e}".format(e=e))
 
     try:
