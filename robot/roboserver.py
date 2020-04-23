@@ -39,7 +39,7 @@ def crc16(data: bytes, poly=0x8408):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", help="Уровень вывода логов", type=int, choices=[0, 1, 2])
+    parser.add_argument("-v", help="Уровень дебага", type=int, choices=[0, 1, 2])
     parser.add_argument("-k", help="Ручной ввод ключа", type=int)
     parser.add_argument("--host", help="Ручной ввод хоста. Формат ввода ip:port", type=str)
     args = parser.parse_args()

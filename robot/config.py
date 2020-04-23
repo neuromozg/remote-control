@@ -15,8 +15,8 @@ servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
 # plowStates = [middleServoPos, 70]
-plantStates = [middleServoPos, middleServoPos]
-grabLimits = [25, 80]
+plantStates = [60, 115]
+grabLimits = [20, 80]
 bucketLimits = [0, 100]
 
 plantActivateFlag = False  # флаг - активирована ли посадка
@@ -69,10 +69,9 @@ def activatePlant(activator):
     def _actPlant():
         global plantActivateFlag
         try:
-            a, b = plantStates
-            for pos in range(a, b, int(a < b) * 2 - 1):
-                robot.setPwm0(pos)
-                time.sleep(0.05)
+            robot.setServo0(plantStates[1])
+            time.sleep(2)
+            robot.setServo0(plantStates[0])
             plantActivateFlag = False
             log("Посадка деактивирована")
         except Exception as e:
