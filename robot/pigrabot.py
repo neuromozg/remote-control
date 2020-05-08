@@ -1,6 +1,12 @@
 import threading
 import time
 
+try:
+    import Adafruit_SSD1306  # sudo pip3 install Adafruit-SSD1306
+    display = Adafruit_SSD1306.SSD1306_128_64(rst=None)  # создаем обект для работы c OLED дисплеем 128х64
+except:
+    display = None
+
 _SHUNT_OHMS = 0.01  # значение сопротивления шунта на плате EduBot
 _MAX_EXPECTED_AMPS = 2.0
 

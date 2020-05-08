@@ -7,9 +7,11 @@ import threading
 
 SELF_HOST = "10.1.0.86:5008"
 # KEY = 6006    # если закомментировано - генерируется автоматически
+# INFO = "КУБОК РТК"
 
 bus = None
 robot = None
+display = pigrabot.displaay
 
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
@@ -115,6 +117,7 @@ def initializeAll():
     try:
         global robot
         global bus
+        global display
         bus = smbus.SMBus(1)
         robot = pigrabot.Pigrabot(bus)
         robot.online = True
@@ -125,6 +128,16 @@ def initializeAll():
         robot.setServo1(int(middleServoPos))
         robot.setServo2(int(middleServoPos))
         robot.setServo3(int(middleServoPos))
+        try:
+            if display is not None:
+                display.begin()
+                display.clear()
+                display.display()
+            else:
+                err("Дисплей робота не инициализирован")
+        except:
+            display = None
+            err("Дисплей робота не инициализирован: ошибка инициализации дисплея")
     except Exception as e:
         err("Ошибка инициализации робота: {e}".format(e=e))
         raise Exception("Ошибка инициализации робота: {e}".format(e=e))
