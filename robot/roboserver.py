@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("-k", help="Ручной ввод ключа", type=int)
     parser.add_argument("--host", help="Ручной ввод хоста. Формат ввода ip:port", type=str)
     parser.add_argument("--info", help="Информационная строка вывода на дисплей", type=str)
+    parser.add_argument("-t", help="Время попытки в минутах", type=int)
     args = parser.parse_args()
     logger = robologger.robologger
     level = robologger.logging.INFO
@@ -120,6 +121,28 @@ if __name__ == '__main__':
             info = None
             logger.debug_0("Строка информации не задана")
 
+        if args.t is not None:
+            try:
+                attemptTime = args.t
+                if (attemptTime < 0) or (attemptTime > 60):
+                    raise ValueError("Время попытки должно быть в диапазоне 0-60 минут")
+                logger.debug_0("Время попытки введено через модификатор: {t}".format(t=attemptTime))
+            except Exception as e:
+                logger.error("Неверный формат введенной времени попытки: {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной времени попытки: {e}".format(e=e.__str__()))
+        elif config.__dict__.get("ATTEMPT_TIME") is not None:
+            try:
+                attemptTime = config.ATTEMPT_TIME
+                if (attemptTime < 0) or (attemptTime > 60):
+                    raise ValueError("Время попытки должно быть в диапазоне 0-60 минут")
+                logger.debug_0("Время попытки взято из файла настроек config.py: {t}".format(t=attemptTime))
+            except Exception as e:
+                logger.error("Неверный формат введенной времени попытки: {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной времени попытки: {e}".format(e=e.__str__()))
+        else:
+            logger.error("Время попытки не задано, введите его через модификатор [-t] или через файл настроек config.py")
+            raise ValueError("Время попытки не задано")
+
         config.logger = logger
 
         try:
@@ -142,7 +165,7 @@ if __name__ == '__main__':
             display = config.display
             width, height = display.width, display.height
             image = Image.new('1', (width, height))
-            font = ImageFont.truetype("arial.ttf", 55)
+            font = ImageFont.truetype("arial.ttf", 52)
             draw = ImageDraw.Draw(image)
             text = info
             if text is not None:
@@ -153,7 +176,7 @@ if __name__ == '__main__':
             timecounter = 0  # вспомогательная переменная, которая переключает режимы анимации
             lastcount = 0  # вспомогатеьная переменная для timecounter
             lastDrawnSecond = 0  # последняя отрисованная секунда, для оптимизации отрисовки времени
-            maxtime = 15 * 60  # максимальное время попытки, в секундах
+            maxtime = attemptTime * 60  # максимальное время попытки, в секундах
             offset = 0
             velocity = -15
             startpos = width

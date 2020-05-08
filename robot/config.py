@@ -7,7 +7,8 @@ import threading
 
 SELF_HOST = "10.1.0.86:5008"
 # KEY = 6006    # если закомментировано - генерируется автоматически
-# INFO = "КУБОК РТК"
+INFO = "КУБОК РТК"
+ATTEMPT_TIME = 12
 
 bus = None
 robot = None
