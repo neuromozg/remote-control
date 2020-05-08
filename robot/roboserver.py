@@ -192,6 +192,8 @@ if __name__ == '__main__':
                     if int(animationTimer) != lastDrawnSecond:
                         draw.rectangle((0, 0, width, height), outline=0, fill=0)
                         invtime = maxtime - animationTimer
+                        if invtime < 0:
+                            invtime = 0
                         draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font, fill=255)
                         lastDrawnSecond = int(animationTimer)
                 display.image(image)
