@@ -11,7 +11,7 @@ SELF_HOST = "10.1.0.86:5008"
 
 bus = None
 robot = None
-display = pigrabot.displaay
+display = pigrabot.display
 
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
