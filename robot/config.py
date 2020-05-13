@@ -22,6 +22,10 @@ plantStates = [60, 115]
 grabLimits = [20, 80]
 bucketLimits = [0, 100]
 
+ALFA = 0.7
+moveSpeed = 0
+rotateSpeed = 0
+
 plantActivateFlag = False  # флаг - активирована ли посадка
 
 logger = None
@@ -39,20 +43,37 @@ def err(msg):
         logger.error(msg)
 
 
+def vectorMove():
+    global moveSpeed
+    global rotateSpeed
+    if moveSpeed == 0:
+        speedL = -rotateSpeed
+        speedR = rotateSpeed
+    else:
+        speedL = ALFA*moveSpeed - (1-ALFA)*rotateSpeed
+        speedR = ALFA*moveSpeed + (1-ALFA)*rotateSpeed
+
+    robot.setPwm0(int(speedL * 2.55))  # [-100;100] -> [-255;255]
+    robot.setPwm1(int(speedR * 2.55))  # [-100;100] -> [-255;255]
+    log("\tvector move: speedL({speedL}), speedR({speedR})".format(speedL=speedL, speedR=speedR))
+
+
 def move(speed):
+    global moveSpeed
     try:
-        robot.setPwm0(-int(speed * 2.55))  # [-100;100] -> [-255;255]
-        robot.setPwm1(int(speed * 2.55))  # [-100;100] -> [-255;255]
+        moveSpeed = speed
         log("command: move({speed})".format(speed=speed))
+        vectorMove()
     except Exception as e:
         err("Ошибка управления: command: move(): {e}".format(e=e))
 
 
 def rotate(speed):
+    global rotateSpeed
     try:
-        robot.setPwm0(int(speed * 2.55))  # [-100;100] -> [-255;255]
-        robot.setPwm1(int(speed * 2.55))  # [-100;100] -> [-255;255]
+        rotateSpeed = speed
         log("command: rotate({speed})".format(speed=speed))
+        vectorMove()
     except Exception as e:
         err("Ошибка управления: command: rotate(): {e}".format(e=e))
 
