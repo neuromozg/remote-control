@@ -22,7 +22,7 @@ plantStates = [60, 115]
 grabLimits = [20, 80]
 bucketLimits = [0, 100]
 
-ALFA = 0.7
+ALFA = 0.675
 moveSpeed = 0
 rotateSpeed = 0
 
@@ -50,9 +50,6 @@ def vectorMove():
     if moveSpeed == 0:
         speedL = -rotateSpeed
         speedR = rotateSpeed
-    elif rotateSpeed == 0:
-        speedL = moveSpeed
-        speedR = moveSpeed
     else:
         speedL = ALFA*moveSpeed - (1-ALFA)*rotateSpeed
         speedR = ALFA*moveSpeed + (1-ALFA)*rotateSpeed
