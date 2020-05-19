@@ -93,7 +93,7 @@ class RemoteRobot:
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
         # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||
         self.__isConnected = False  # флаг подключения
-        self.__speed = 50  # диапазон - [0, 100]
+        self.__speed = 80  # диапазон - [0, 100]
         self.__speedAddStep = 20  # шаг с которым может меняться скорость
         self.__moveDirection = 0  # Направление движения робота: -1, 0, 1
         self.__rotateDirection = 0  # Направление поворота робота: -1, 0, 1
