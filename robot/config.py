@@ -22,7 +22,7 @@ plantStates = [60, 115]
 grabLimits = [20, 80]
 bucketLimits = [0, 100]
 
-ALFA = 0.675
+ALFA = 0.575
 moveSpeed = 0
 rotateSpeed = 0
 

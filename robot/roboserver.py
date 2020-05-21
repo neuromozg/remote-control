@@ -167,7 +167,7 @@ if __name__ == '__main__':
             width, height = display.width, display.height
             image = Image.new('1', (width, height))
             font = ImageFont.truetype("arial.ttf", 52)
-            fontToSpeed = ImageFont.truetype("arial.ttf", 25)
+            fontToSpeed = ImageFont.truetype("arial.ttf", 24)
             fontToSpeed2 = ImageFont.truetype("arial.ttf", 35)
             draw = ImageDraw.Draw(image)
             text = info
