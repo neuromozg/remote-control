@@ -19,5 +19,5 @@ while True:
     current = ina219.current                # current in mA
 
     print("Напряжение: %.2f" % bus_voltage)
-    print("Ток: %.2f" % current*1000)
-    time.sleep(2)
+    print("Ток: %.3f" % (current/1000))
+    time.sleep(3)
