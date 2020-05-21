@@ -197,9 +197,9 @@ if __name__ == '__main__':
                 if oldReferenceSpeed != referenceSpeed:     # вклиниваем показ скорости в любой момент времени, при ее изменении
                     draw.rectangle((0, 0, width, height), outline=0, fill=0)
                     if referenceSpeed > oldReferenceSpeed:
-                        draw.text((0, 0), "SPEED UP:", font=fontToSpeed, fill=255)
+                        draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
                     else:
-                        draw.text((0, 0), "SPEED DN:", font=fontToSpeed, fill=255)
+                        draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
                     draw.text((0, 30), "  {0}".format(referenceSpeed), font=fontToSpeed, fill=255)
                     oldReferenceSpeed = referenceSpeed
                     display.image(image)
