@@ -34,8 +34,8 @@ def info():
     print("\tS - двигаться назад (удерживайте)")
     print("\tA - поворот влево (удерживайте)")
     print("\tD - поворот вправо (удерживайте)")
-    print("\tX - убавить скорость")
-    print("\tZ - прибавить скорость")
+    print("\tZ - убавить скорость")
+    print("\tX - прибавить скорость")
     print("\tJ - поднять/опустить плуг")
     print("\tH - посадить картошку")
     print("\tR - поднять ковш (удерживайте)")
@@ -87,13 +87,14 @@ class RemoteRobot:
         self.__port = None
         self.__sock = None
         self.__key = None
-        self.__packageFormat = "=Hbbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
+        self.__packageFormat = "=Hbbbb??H"  # формат отправляемых пакетов, порядок и расшифровка ниже
         #   || (H) uint16 - package number [0, 0xFFFF]  ||->
         # ->|| (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
-        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||
+        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||->
+        # ->|| (H) uint8 - display abs speed            ||
         self.__isConnected = False  # флаг подключения
-        self.__speed = 50  # диапазон - [0, 100]
+        self.__speed = 80  # диапазон - [0, 100]
         self.__speedAddStep = 20  # шаг с которым может меняться скорость
         self.__moveDirection = 0  # Направление движения робота: -1, 0, 1
         self.__rotateDirection = 0  # Направление поворота робота: -1, 0, 1
@@ -140,7 +141,8 @@ class RemoteRobot:
                                    packageNum,
                                    moveSpeed, rotateSpeed,
                                    self.__bucketPosition, self.__grabPosition,
-                                   self.__plowState, self.__plantStateFlag)  # упаковка параметров управления
+                                   self.__plowState, self.__plantStateFlag,
+                                   self.__speed)  # упаковка параметров управления
                 crc = struct.pack('=H', crc16(data))  # избыточный код
                 key = struct.pack('=H', self.__key)
                 package += crc + key + data  # объединение частей пакета
