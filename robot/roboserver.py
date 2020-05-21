@@ -23,7 +23,7 @@ protocolConfig = {
     "checksum": "crc16",
     "formatChecksum": 'H',  # 2 байта
     "formatKey": 'H',
-    "formatData": 'Hbbbb??'  # 2 байта + 4 байта + 2 байта bool
+    "formatData": 'Hbbbb??H'  # 2 байта + 4 байта + 2 байта bool + 1 байт
 }
 
 __headFormat = '=' + protocolConfig["formatChecksum"] + protocolConfig["formatKey"]
@@ -158,6 +158,7 @@ if __name__ == '__main__':
             INFO_DISPLAY_OK = False
             logger.error("Ошибка инициализации дисплея, вывод информации на дисплей не возможен")
 
+        referenceSpeed = 0  # справочная скорость, для вывода на дисплей
 
         def animate():
             """ Функция анимации текста и таймера """
@@ -166,10 +167,12 @@ if __name__ == '__main__':
             width, height = display.width, display.height
             image = Image.new('1', (width, height))
             font = ImageFont.truetype("arial.ttf", 52)
+            fontToSpeed = ImageFont.truetype("arial.ttf", 30)
             draw = ImageDraw.Draw(image)
             text = info
             if text is not None:
                 maxwidth, _ = draw.textsize(text, font=font)
+            oldReferenceSpeed = referenceSpeed  # старое значение справочной скорости
             zeroTime = timer  # время начала запуска программы
             animationTimer = 0  # таймер
             timetochange = 25  # время, которое должно пройти для смены режима анимации, в сек.
@@ -191,7 +194,19 @@ if __name__ == '__main__':
                     lastcount = animationTimer
                     pos = startpos
 
-                if not CHANGE_TEXT_TO_TIME_FLAG:
+                if oldReferenceSpeed != referenceSpeed:     # вклиниваем показ скорости в любой момент времени, при ее изменении
+                    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+                    if referenceSpeed > oldReferenceSpeed:
+                        draw.text((0, 0), "SPEED UP:", font=fontToSpeed, fill=255)
+                    else:
+                        draw.text((0, 0), "SPEED DOWN:", font=fontToSpeed, fill=255)
+                    draw.text((0, 32), "{0}".format((referenceSpeed, )), font=fontToSpeed, fill=255)
+                    oldReferenceSpeed = referenceSpeed
+                    display.image(image)
+                    display.display()
+                    time.sleep(1.5)
+
+                elif not CHANGE_TEXT_TO_TIME_FLAG:
                     if text is None:
                         CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
                         continue
@@ -219,6 +234,7 @@ if __name__ == '__main__':
                             invtime = 0
                         draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font, fill=255)
                         lastDrawnSecond = int(animationTimer)
+
                 display.image(image)
                 display.display()
                 time.sleep(0.25)
@@ -239,7 +255,7 @@ if __name__ == '__main__':
             threading.Thread(target=animate, daemon=True).start()
             logger.info("Анимация на дисплее запущена".format(key=key))
 
-        previousStates = [None, None, None, None, None, None]
+        previousStates = [None, None, None, None, None, None, None]
         actualPackageNum = -1
         while True:
             try:
@@ -272,6 +288,8 @@ if __name__ == '__main__':
                             config.changePlowState(data[4])
                         if data[5] != previousStates[5]:
                             config.activatePlant(data[5])
+                        if data[6] != previousStates[6]:
+                            referenceSpeed = data[6]
                         previousStates = data[:]
                     else:
                         logger.debug_1("Неверная crc-сумма пакета: {ncrc}/{vcrc}".format(ncrc=crc, vcrc=crc16(

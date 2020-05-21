@@ -50,6 +50,9 @@ def vectorMove():
     if moveSpeed == 0:
         speedL = -rotateSpeed
         speedR = rotateSpeed
+    elif rotateSpeed == 0:
+        speedL = moveSpeed
+        speedR = moveSpeed
     else:
         speedL = ALFA*moveSpeed - (1-ALFA)*rotateSpeed
         speedR = ALFA*moveSpeed + (1-ALFA)*rotateSpeed

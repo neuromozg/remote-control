@@ -10,7 +10,7 @@ protocolConfig = {
     "checksum": "crc16",
     "formatChecksum": 'H',  # 2 байта
     "formatKey": 'H',
-    "formatData": 'Hbbbb??'  # 2 байта + 4 байта + 2 байта bool
+    "formatData": 'Hbbbb??H'  # 2 байта + 4 байта + 2 байта bool
 }
 
 __headFormat = '=' + protocolConfig["formatChecksum"] + protocolConfig["formatKey"]
@@ -57,11 +57,14 @@ class Robot:
     def grabPosition(self, position):
         print("grab position:  ", position)
 
+    def displaySpeed(self, speed):
+        print("speed has been changed: ", speed)
+
 
 if __name__ == '__main__':
     try:
         robot = Robot()
-        previousStates = [None, None, None, None, None, None]
+        previousStates = [None, None, None, None, None, None, None]
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(3.0)
         sock.bind(("127.0.0.1", 5005))
@@ -87,6 +90,8 @@ if __name__ == '__main__':
                         robot.changePlowState(data[4])
                     if data[5] != previousStates[5]:
                         robot.activatePlant(data[5])
+                    if data[6] != previousStates[6]:
+                        robot.displaySpeed(data[6])
 
                     previousStates = data[:]
             except socket.timeout:

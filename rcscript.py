@@ -87,11 +87,12 @@ class RemoteRobot:
         self.__port = None
         self.__sock = None
         self.__key = None
-        self.__packageFormat = "=Hbbbb??"  # формат отправляемых пакетов, порядок и расшифровка ниже
+        self.__packageFormat = "=Hbbbb??H"  # формат отправляемых пакетов, порядок и расшифровка ниже
         #   || (H) uint16 - package number [0, 0xFFFF]  ||->
         # ->|| (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
-        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||
+        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||->
+        # ->|| (H) uint8 - display abs speed            ||
         self.__isConnected = False  # флаг подключения
         self.__speed = 80  # диапазон - [0, 100]
         self.__speedAddStep = 20  # шаг с которым может меняться скорость
@@ -140,7 +141,8 @@ class RemoteRobot:
                                    packageNum,
                                    moveSpeed, rotateSpeed,
                                    self.__bucketPosition, self.__grabPosition,
-                                   self.__plowState, self.__plantStateFlag)  # упаковка параметров управления
+                                   self.__plowState, self.__plantStateFlag,
+                                   self.__speed)  # упаковка параметров управления
                 crc = struct.pack('=H', crc16(data))  # избыточный код
                 key = struct.pack('=H', self.__key)
                 package += crc + key + data  # объединение частей пакета
