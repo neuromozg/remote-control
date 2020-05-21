@@ -168,6 +168,7 @@ if __name__ == '__main__':
             image = Image.new('1', (width, height))
             font = ImageFont.truetype("arial.ttf", 52)
             fontToSpeed = ImageFont.truetype("arial.ttf", 25)
+            fontToSpeed2 = ImageFont.truetype("arial.ttf", 35)
             draw = ImageDraw.Draw(image)
             text = info
             if text is not None:
@@ -200,7 +201,7 @@ if __name__ == '__main__':
                         draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
                     else:
                         draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
-                    draw.text((0, 30), "  {0}".format(referenceSpeed), font=fontToSpeed, fill=255)
+                    draw.text((30, 27), "{0}".format(referenceSpeed), font=fontToSpeed2, fill=255)
                     oldReferenceSpeed = referenceSpeed
                     display.image(image)
                     display.display()
