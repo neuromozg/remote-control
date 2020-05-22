@@ -86,7 +86,13 @@ if __name__ == '__main__':
         if args.host is not None:
             try:
                 ip, port = args.host.replace(' ', '').split(':')
-                port = int(port)
+                if port == "random":
+                    import random
+
+                    port = random.randint(5000, 5999)
+                    logger.debug_0("Порт сгенерирован случайно: {port}".format(port=port))
+                else:
+                    port = int(port)
                 logger.debug_0("Хост введен через модификатор: {host}".format(host=args.host))
             except Exception as e:
                 logger.error("Неверный формат введенного хоста: {e}".format(e=e.__str__()))
@@ -94,7 +100,13 @@ if __name__ == '__main__':
         elif config.__dict__.get("SELF_HOST") is not None:
             try:
                 ip, port = config.SELF_HOST.replace(' ', '').split(':')
-                port = int(port)
+                if port == "random":
+                    import random
+
+                    port = random.randint(5000, 5999)
+                    logger.debug_0("Порт сгенерирован случайно: {port}".format(port=port))
+                else:
+                    port = int(port)
                 logger.debug_0("Хост взят из файла настроек config.py: {host}".format(host=config.SELF_HOST))
             except Exception as e:
                 logger.error("Неверный формат хоста: {e}".format(e=e.__str__()))
@@ -159,6 +171,7 @@ if __name__ == '__main__':
             logger.error("Ошибка инициализации дисплея, вывод информации на дисплей не возможен")
 
         referenceSpeed = 0  # справочная скорость, для вывода на дисплей
+        referenceSpeedFlag = False
 
         def animate():
             """ Функция анимации текста и таймера """
@@ -195,17 +208,19 @@ if __name__ == '__main__':
                     lastcount = animationTimer
                     pos = startpos
 
-                if oldReferenceSpeed != referenceSpeed:     # вклиниваем показ скорости в любой момент времени, при ее изменении
-                    draw.rectangle((0, 0, width, height), outline=0, fill=0)
-                    if referenceSpeed > oldReferenceSpeed:
+                if referenceSpeedFlag:     # вклиниваем показ скорости в любой момент времени, при ее изменении
+                    count = 0
+                    while count < 4:
+                        if referenceSpeedFlag:
+                            referenceSpeedFlag = False
+                            count = 0
+                        draw.rectangle((0, 0, width, height), outline=0, fill=0)
                         draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
-                    else:
-                        draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
-                    draw.text((30, 27), "{0}".format(referenceSpeed), font=fontToSpeed2, fill=255)
-                    oldReferenceSpeed = referenceSpeed
-                    display.image(image)
-                    display.display()
-                    time.sleep(1.2)
+                        draw.text((30, 27), "{0}".format(referenceSpeed), font=fontToSpeed2, fill=255)
+                        count += 1
+                        display.image(image)
+                        display.display()
+                        time.sleep(0.3)
 
                 elif not CHANGE_TEXT_TO_TIME_FLAG:
                     if text is None:
@@ -260,6 +275,9 @@ if __name__ == '__main__':
         actualPackageNum = -1
         while True:
             try:
+                if (time.time() - timer) > attemptTime * 60:
+                    logger.info("Попытка закончена, произвожу отключение сервера...")
+                    break
                 rawdata, addr = sock.recvfrom(1024)  # buffer size is 1024 bytes
                 data = struct.unpack(__packageFormat, rawdata)
                 logger.debug_2("Package: crc: {0}, key: {1}, number: {2}, data: {3}".format(*data[:3], data[3:]))
@@ -290,7 +308,8 @@ if __name__ == '__main__':
                         if data[5] != previousStates[5]:
                             config.activatePlant(data[5])
                         if data[6] != previousStates[6]:
-                            referenceSpeed = data[6]
+                            referenceSpeedFlag = True
+                            referenceSpeed = data[6] & 0x7F
                         previousStates = data[:]
                     else:
                         logger.debug_1("Неверная crc-сумма пакета: {ncrc}/{vcrc}".format(ncrc=crc, vcrc=crc16(
@@ -303,7 +322,13 @@ if __name__ == '__main__':
                 time.sleep(1)
             except Exception as e:
                 logger.error("Ошибка при приеме пакета: {e}".format(e=e))
+
+        config.release()
+        logger.info("Сервер успешно завершил свою работу")
+        time.sleep(1)
+        sys.exit()
     except KeyboardInterrupt:
         config.release()
+        logger.info("Сервер успешно завершил свою работу")
         time.sleep(1)
         sys.exit()
