@@ -212,12 +212,15 @@ if __name__ == '__main__':
                     lastcount = animationTimer
                     pos = startpos
 
-                if referenceSpeedFlag and (maxtime - animationTimer) > 5:     # вклиниваем показ скорости в любой момент времени, при ее изменении
+                if referenceSpeedFlag and (maxtime - animationTimer) > 7:     # вклиниваем показ скорости в любой момент времени, при ее изменении
                     count = 0
-                    while (count < 4) and ((maxtime - animationTimer) > 5):
+                    while count < 4:
+                        animationTimer = time.time() - zeroTime
                         if referenceSpeedFlag:
                             referenceSpeedFlag = False
                             count = 0
+                        if (maxtime - animationTimer) < 5:
+                            break
                         draw.rectangle((0, 0, width, height), outline=0, fill=0)
                         draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
                         draw.text((30, 27), "{0}".format(referenceSpeed), font=fontToSpeed2, fill=255)
