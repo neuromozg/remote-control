@@ -254,6 +254,8 @@ if __name__ == '__main__':
                             invtime = 0
                             draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font,
                                       fill=255)
+                            display.image(image)
+                            display.display()
                             break
                         draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font, fill=255)
                         lastDrawnSecond = int(animationTimer)
