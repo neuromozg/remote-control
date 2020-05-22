@@ -212,9 +212,9 @@ if __name__ == '__main__':
                     lastcount = animationTimer
                     pos = startpos
 
-                if referenceSpeedFlag:     # вклиниваем показ скорости в любой момент времени, при ее изменении
+                if referenceSpeedFlag and (maxtime - animationTimer) > 5:     # вклиниваем показ скорости в любой момент времени, при ее изменении
                     count = 0
-                    while count < 4:
+                    while (count < 4) and ((maxtime - animationTimer) > 5):
                         if referenceSpeedFlag:
                             referenceSpeedFlag = False
                             count = 0
@@ -254,9 +254,9 @@ if __name__ == '__main__':
                         draw.rectangle((0, 0, width, height), outline=0, fill=0)
                         invtime = maxtime - animationTimer
                         if invtime < 0:
-                            invtime = 0
-                            draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font,
-                                      fill=255)
+                            font = ImageFont.truetype("arial.ttf", 32)
+                            draw.text((0, 0), "GAME", font=font, fill=255)
+                            draw.text((0, 32), "OVER", font=font, fill=255)
                             display.image(image)
                             display.display()
                             break
