@@ -91,7 +91,8 @@ if __name__ == '__main__':
                     if data[5] != previousStates[5]:
                         robot.activatePlant(data[5])
                     if data[6] != previousStates[6]:
-                        robot.displaySpeed(data[6])
+                        sdata = data[6] & 0x7F
+                        robot.displaySpeed(sdata)
 
                     previousStates = data[:]
             except socket.timeout:
