@@ -48,6 +48,7 @@ def crc16(data: bytes, poly=0x8408):
 
 
 if __name__ == '__main__':
+    global timer
     timer = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", help="Уровень дебага", type=int, choices=[0, 1, 2])
@@ -115,6 +116,7 @@ if __name__ == '__main__':
             logger.error("Хост не задан, введите хост через модификатор [--host] или через файл настроек config.py")
             raise ValueError("Хост не задан")
 
+        global info
         if args.info is not None:
             try:
                 info = args.info
@@ -133,6 +135,7 @@ if __name__ == '__main__':
             info = None
             logger.debug_0("Строка информации не задана")
 
+        global attemptTime
         if args.t is not None:
             try:
                 attemptTime = args.t
@@ -170,11 +173,13 @@ if __name__ == '__main__':
             INFO_DISPLAY_OK = False
             logger.error("Ошибка инициализации дисплея, вывод информации на дисплей не возможен")
 
+        global referenceSpeed, referenceSpeedFlag
         referenceSpeed = 0  # справочная скорость, для вывода на дисплей
         referenceSpeedFlag = False
 
         def animate():
             """ Функция анимации текста и таймера """
+            global referenceSpeed, referenceSpeedFlag, info, timer, attemptTime
             CHANGE_TEXT_TO_TIME_FLAG = False  # флаг переключения анимации текста на время
             display = config.display
             width, height = display.width, display.height
@@ -186,7 +191,6 @@ if __name__ == '__main__':
             text = info
             if text is not None:
                 maxwidth, _ = draw.textsize(text, font=font)
-            oldReferenceSpeed = referenceSpeed  # старое значение справочной скорости
             zeroTime = timer  # время начала запуска программы
             animationTimer = 0  # таймер
             timetochange = 25  # время, которое должно пройти для смены режима анимации, в сек.
