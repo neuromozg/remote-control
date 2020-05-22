@@ -150,9 +150,13 @@ def initializeAll():
         robot.start()
         robot.setPwm0(0)
         robot.setPwm1(0)
+        time.sleep(0.3)
         robot.setServo0(int(middleServoPos))
+        time.sleep(0.3)
         robot.setServo1(int(middleServoPos))
+        time.sleep(0.3)
         robot.setServo2(int(middleServoPos))
+        time.sleep(0.3)
         robot.setServo3(int(middleServoPos))
         try:
             if display is not None:
@@ -171,6 +175,17 @@ def initializeAll():
 
 def release():
     try:
+        robot.setPwm0(0)
+        robot.setPwm1(0)
+        time.sleep(0.3)
+        robot.setServo0(int(middleServoPos))
+        time.sleep(0.3)
+        robot.setServo1(int(middleServoPos))
+        time.sleep(0.3)
+        robot.setServo2(int(middleServoPos))
+        time.sleep(0.3)
+        robot.setServo3(int(middleServoPos))
+        time.sleep(0.3)
         robot.exit()
         bus.close()
     except Exception as e:

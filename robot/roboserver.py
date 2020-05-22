@@ -258,8 +258,8 @@ if __name__ == '__main__':
                         invtime = maxtime - animationTimer
                         if invtime < 0:
                             font = ImageFont.truetype("arial.ttf", 32)
-                            draw.text((0, 0), "GAME", font=font, fill=255)
-                            draw.text((0, 32), "OVER", font=font, fill=255)
+                            draw.text((16, 0), "GAME", font=font, fill=255)
+                            draw.text((16, 32), "OVER", font=font, fill=255)
                             display.image(image)
                             display.display()
                             break
