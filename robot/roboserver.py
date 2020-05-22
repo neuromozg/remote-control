@@ -230,6 +230,9 @@ if __name__ == '__main__':
                     if text is None:
                         CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
                         continue
+                    if (maxtime - animationTimer) < 15:
+                        CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
+                        continue
                     draw.rectangle((0, 0, width, height), outline=0, fill=0)
                     x = pos
                     for i, c in enumerate(text):
