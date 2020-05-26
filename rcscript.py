@@ -4,8 +4,8 @@ import socket
 import struct
 import threading
 from pynput import keyboard
+from pynput.keyboard import Key
 import time
-
 """ Для того, чтобы единожды задать ip и порт, расскоментируйте следующие строки и запишите в них
  правильные значения ip и порта """
 IP = "188.68.186.139"
@@ -20,11 +20,11 @@ controlKeyMap = {
     "addSpeed": ["+", "=", "]", "}", "Ъ", "ъ"],
     "subSpeed": ["_", "-", "[", "{", "Х", "х"],
     "changePlowState": ["J", "j", "о", "О"],
-    "changePlantStateFlag": ["H", "h", "р", "Р"],
-    "bucketMoveUp": ["R", "r", "к", "К"],
-    "bucketMoveDown": ["F", "f", "а", "А"],
-    "grabClamp": ["I", "i", "ш", "Ш"],
-    "grabLoose": ["U", "u", "г", "Г"]
+    "changePlantStateFlag": [Key.space],
+    "bucketMoveUp": ["P", "p", "з", "З"],
+    "bucketMoveDown": ["L", "l", "д", "Д"],
+    "grabClamp": ["O", "o", "щ", "Щ"],
+    "grabLoose": ["K", "k", "л", "Л"]
 }
 
 
@@ -36,11 +36,11 @@ def info():
     print("\tD - turn right (hold on)")
     print("\t- - slow down speed")
     print("\t+ - speed up")
-    print("\tH - plant potatoes")
-    print("\tR - bucket move up (hold on)")
-    print("\tF - bucket move down (hold on)")
-    print("\tI - grip a grab  (hold on)")
-    print("\tU - release a grab (hold on)")
+    print("\tSpace - plant potatoes")
+    print("\tP - bucket move up (hold on)")
+    print("\tL - bucket move down (hold on)")
+    print("\tO - grip a grab  (hold on)")
+    print("\tK - release a grab (hold on)")
 
 
 def crc16(data: bytes, poly=0x8408):
@@ -169,48 +169,56 @@ class RemoteRobot:
         def onPress(key):
             global controlKeyMap
             try:
-                if key.char in controlKeyMap["moveForward"]:
+                key = key.char
+            except AttributeError:
+                pass
+            try:
+                if key in controlKeyMap["moveForward"]:
                     self.__moveDirection = 1
-                elif key.char in controlKeyMap["moveBackward"]:
+                elif key in controlKeyMap["moveBackward"]:
                     self.__moveDirection = -1
-                elif key.char in controlKeyMap["rotateRight"]:
+                elif key in controlKeyMap["rotateRight"]:
                     self.__rotateDirection = 1
-                elif key.char in controlKeyMap["rotateLeft"]:
+                elif key in controlKeyMap["rotateLeft"]:
                     self.__rotateDirection = -1
 
-                elif key.char in controlKeyMap["changePlantStateFlag"]:
+                elif key in controlKeyMap["changePlantStateFlag"]:
                     self.__plantStateFlag = True  # при зажатой клавише всегда отправляется True
 
-                elif key.char in controlKeyMap["bucketMoveUp"]:
+                elif key in controlKeyMap["bucketMoveUp"]:
                     self.__bucketPosition = min(max(-100, self.__bucketPosition + self.__positionChangeStep), 100)
-                elif key.char in controlKeyMap["bucketMoveDown"]:
+                elif key in controlKeyMap["bucketMoveDown"]:
                     self.__bucketPosition = min(max(-100, self.__bucketPosition - self.__positionChangeStep), 100)
 
-                elif key.char in controlKeyMap["grabClamp"]:
+                elif key in controlKeyMap["grabClamp"]:
                     self.__grabPosition = min(max(-100, self.__grabPosition + self.__positionChangeStep), 100)
-                elif key.char in controlKeyMap["grabLoose"]:
+                elif key in controlKeyMap["grabLoose"]:
                     self.__grabPosition = min(max(-100, self.__grabPosition - self.__positionChangeStep), 100)
 
-            except AttributeError:
+            except:
                 pass
 
         def onRelease(key):
             global controlKeyMap
             try:
-                if (key.char in controlKeyMap["moveForward"]) or (key.char in controlKeyMap["moveBackward"]):
+                key = key.char
+            except AttributeError:
+                pass
+            try:
+                if (key in controlKeyMap["moveForward"]) or (key in controlKeyMap["moveBackward"]):
                     self.__moveDirection = 0
-                elif (key.char in controlKeyMap["rotateRight"]) or (key.char in controlKeyMap["rotateLeft"]):
+                elif (key in controlKeyMap["rotateRight"]) or (key in controlKeyMap["rotateLeft"]):
                     self.__rotateDirection = 0
 
-                elif key.char in controlKeyMap["addSpeed"]:
+                elif key in controlKeyMap["addSpeed"]:
                     self.addToSpeed(self.__speedAddStep)
-                elif key.char in controlKeyMap["subSpeed"]:
+                elif key in controlKeyMap["subSpeed"]:
                     self.addToSpeed(-self.__speedAddStep)
 
-                elif key.char in controlKeyMap["changePlantStateFlag"]:
+                elif key in controlKeyMap["changePlantStateFlag"]:
                     self.__plantStateFlag = False
 
-            except AttributeError:
+            except:
                 pass
 
         keyboard.Listener(
