@@ -39,8 +39,8 @@ def info():
     print("\tSpace - plant potatoes")
     print("\tP - bucket move up (hold on)")
     print("\tL - bucket move down (hold on)")
-    print("\tO - grip a grab  (hold on)")
-    print("\tK - release a grab (hold on)")
+    print("\tK - grip a grab  (hold on)")
+    print("\tO - release a grab (hold on)")
 
 
 def crc16(data: bytes, poly=0x8408):
