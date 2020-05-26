@@ -23,8 +23,8 @@ controlKeyMap = {
     "changePlantStateFlag": [Key.space],
     "bucketMoveUp": ["P", "p", "з", "З"],
     "bucketMoveDown": ["L", "l", "д", "Д"],
-    "grabClamp": ["O", "o", "щ", "Щ"],
-    "grabLoose": ["K", "k", "л", "Л"]
+    "grabLoose": ["O", "o", "щ", "Щ"],
+    "grabClamp": ["K", "k", "л", "Л"]
 }
 
 
