@@ -138,7 +138,7 @@ def grabPosition(position):
         position = int(((position / 200) + 0.5) * grabPosLen + grabLimits[0])  # [-100, 100] -> [0, 1] -> [grabLimits[0], grabLimits[1]]
         position = min(max(grabLimits[0], position), grabLimits[1])
         log("\tposition convert to pwm({position})".format(position=position))
-        robot.setServo3(position)
+        robot.setServo1(position)
     except Exception as e:
         err("Ошибка управления: command: grabPosition(): {e}".format(e=e))
 
