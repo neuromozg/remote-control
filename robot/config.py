@@ -119,22 +119,26 @@ def activatePlant(activator):
 
 def bucketPosition(position):
     try:
-        position = -position
-        position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
-        position = min(max(bucketLimits[0], position), bucketLimits[1])
-        robot.setServo2(position)
         log("command: bucketPosition({position})".format(position=position))
+        position = -position
+        bucketPosLen = bucketLimits[1]-bucketLimits[0]
+        position = int(((position / 200) + 0.5) * bucketPosLen + bucketLimits[0])  # [-100, 100] -> [0, 1] -> [bucketLimits[0], bucketLimits[1]]
+        position = min(max(bucketLimits[0], position), bucketLimits[1])
+        log("\tposition convert to pwm({position})".format(position=position))
+        robot.setServo2(position)
     except Exception as e:
         err("Ошибка управления: command: bucketPosition(): {e}".format(e=e))
 
 
 def grabPosition(position):
     try:
-        position = -position
-        position = int((position / 100) * (servoPosLen // 2) + middleServoPos)  # [-100, 100] -> [-62, 62] -> [0...62...124]
-        position = min(max(grabLimits[0], position), grabLimits[1])
-        robot.setServo3(position)
         log("command: grabPosition({position})".format(position=position))
+        position = -position
+        grabPosLen = grabLimits[1] - grabLimits[0]
+        position = int(((position / 200) + 0.5) * grabPosLen + grabLimits[0])  # [-100, 100] -> [0, 1] -> [grabLimits[0], grabLimits[1]]
+        position = min(max(grabLimits[0], position), grabLimits[1])
+        log("\tposition convert to pwm({position})".format(position=position))
+        robot.setServo3(position)
     except Exception as e:
         err("Ошибка управления: command: grabPosition(): {e}".format(e=e))
 
@@ -158,6 +162,10 @@ def initializeAll():
         robot.setServo2(int(middleServoPos))
         time.sleep(0.3)
         robot.setServo3(int(middleServoPos))
+        time.sleep(0.5)
+        grabPosition(0)
+        time.sleep(0.2)
+        bucketPosition(0)
         try:
             if display is not None:
                 display.begin()
