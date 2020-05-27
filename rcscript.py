@@ -228,6 +228,7 @@ class RemoteRobot:
 
 
 if __name__ == '__main__':
+    print("AgroBot remote control v0.1a")
     robot = RemoteRobot()
     try:
         while True:
