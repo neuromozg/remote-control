@@ -119,12 +119,12 @@ def activatePlant(activator):
 
 def bucketPosition(position):
     try:
-        log("command: bucketPosition({position})".format(position=position))
+        pos = position
         position = -position
         bucketPosLen = bucketLimits[1]-bucketLimits[0]
         position = int(((position / 200) + 0.5) * bucketPosLen + bucketLimits[0])  # [-100, 100] -> [0, 1] -> [bucketLimits[0], bucketLimits[1]]
         position = min(max(bucketLimits[0], position), bucketLimits[1])
-        log("\tposition convert to pwm({position})".format(position=position))
+        log("command: bucketPosition({pos}):\tposition convert to pwm({pwm})".format(pos=pos, pwm=position))
         robot.setServo2(position)
     except Exception as e:
         err("Ошибка управления: command: bucketPosition(): {e}".format(e=e))
@@ -132,12 +132,12 @@ def bucketPosition(position):
 
 def grabPosition(position):
     try:
-        log("command: grabPosition({position})".format(position=position))
+        pos = position
         position = -position
         grabPosLen = grabLimits[1] - grabLimits[0]
         position = int(((position / 200) + 0.5) * grabPosLen + grabLimits[0])  # [-100, 100] -> [0, 1] -> [grabLimits[0], grabLimits[1]]
         position = min(max(grabLimits[0], position), grabLimits[1])
-        log("\tposition convert to pwm({position})".format(position=position))
+        log("command: grabPosition({pos}):\tposition convert to pwm({pwm})".format(pos=pos, pwm=position))
         robot.setServo1(position)
     except Exception as e:
         err("Ошибка управления: command: grabPosition(): {e}".format(e=e))

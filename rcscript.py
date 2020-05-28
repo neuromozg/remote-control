@@ -101,7 +101,7 @@ class RemoteRobot:
         self.__plantStateFlag = False  # Флаг активации диспенсора при True - активируется, False - сброс флага
         self.__bucketPosition = 0  # Позиция ковша, диапазон - [-100, 100]
         self.__grabPosition = 0  # Позиция схвата, диапазон - [-100, 100]
-        self.__positionChangeStep = 1  # Шаг изменения позиций при зажатии клавиш управения
+        self.__positionChangeStep = 3  # Шаг изменения позиций при зажатии клавиш управения
         self.__changeSpeedFlag = False  # Флаг изменения скорости
 
     def connect(self, ip, port, key):
@@ -228,7 +228,7 @@ class RemoteRobot:
 
 
 if __name__ == '__main__':
-    print("AgroBot remote control v0.1a")
+    print("AgroBot remote control v1.0b")
     robot = RemoteRobot()
     try:
         while True:
