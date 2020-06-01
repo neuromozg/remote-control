@@ -286,6 +286,11 @@ if __name__ == '__main__':
             threading.Thread(target=animate, daemon=True).start()
             logger.info("Анимация на дисплее запущена".format(key=key))
 
+        print(" ")
+        print("port: ", port)
+        print("key: ", key)
+        print(" ")
+
         previousStates = [None, None, None, None, None, None, None]
         actualPackageNum = -1
         while True:
@@ -338,11 +343,15 @@ if __name__ == '__main__':
             except Exception as e:
                 logger.error("Ошибка при приеме пакета: {e}".format(e=e))
 
+        config.beep()
+        time.sleep(0.1)
         config.release()
         logger.info("Сервер успешно завершил свою работу")
         time.sleep(1)
         sys.exit()
     except KeyboardInterrupt:
+        config.beep()
+        time.sleep(0.1)
         config.release()
         logger.info("Сервер успешно завершил свою работу")
         time.sleep(1)

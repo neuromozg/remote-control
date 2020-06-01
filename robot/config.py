@@ -143,6 +143,14 @@ def grabPosition(position):
         err("Ошибка управления: command: grabPosition(): {e}".format(e=e))
 
 
+def beep():
+    try:
+        log("command: beep()")
+        robot.beep()
+    except Exception as e:
+        err("Ошибка управления: command: beep(): {e}".format(e=e))
+
+
 def initializeAll():
     try:
         global robot
