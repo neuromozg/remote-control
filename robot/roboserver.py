@@ -223,7 +223,7 @@ if __name__ == '__main__':
                             break
                         draw.rectangle((0, 0, width, height), outline=0, fill=0)
                         draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
-                        draw.text((30, 27), "{0}".format(referenceSpeed), font=fontToSpeed2, fill=255)
+                        draw.text((30, 27), "{0}%".format(referenceSpeed), font=fontToSpeed2, fill=255)
                         count += 1
                         display.image(image)
                         display.display()
