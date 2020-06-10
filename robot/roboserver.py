@@ -173,13 +173,15 @@ if __name__ == '__main__':
             INFO_DISPLAY_OK = False
             logger.error("Ошибка инициализации дисплея, вывод информации на дисплей не возможен")
 
+        global exitFlag
         global referenceSpeed, referenceSpeedFlag
+        exitFlag = False
         referenceSpeed = 0  # справочная скорость, для вывода на дисплей
         referenceSpeedFlag = False
 
         def animate():
             """ Функция анимации текста и таймера """
-            global referenceSpeed, referenceSpeedFlag, info, timer, attemptTime
+            global exitFlag, referenceSpeed, referenceSpeedFlag, info, timer, attemptTime
             CHANGE_TEXT_TO_TIME_FLAG = False  # флаг переключения анимации текста на время
             display = config.display
             width, height = display.width, display.height
@@ -202,7 +204,7 @@ if __name__ == '__main__':
             velocity = -15
             startpos = width
             pos = startpos
-            while True:
+            while not exitFlag:
                 animationTimer = time.time() - zeroTime
                 timecounter = animationTimer - lastcount
 
@@ -216,6 +218,8 @@ if __name__ == '__main__':
                     count = 0
                     while count < 4:
                         animationTimer = time.time() - zeroTime
+                        if exitFlag:
+                            break
                         if referenceSpeedFlag:
                             referenceSpeedFlag = False
                             count = 0
@@ -350,6 +354,17 @@ if __name__ == '__main__':
         time.sleep(1)
         sys.exit()
     except KeyboardInterrupt:
+        exitFlag = True
+        display = config.display
+        width, height = display.width, display.height
+        image = Image.new('1', (width, height))
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.truetype("arial.ttf", 32)
+        draw.text((16, 0), "GAME", font=font, fill=255)
+        draw.text((16, 32), "OVER", font=font, fill=255)
+        display.image(image)
+        time.sleep(0.5)
+        display.display()
         config.beep()
         time.sleep(0.1)
         config.release()
