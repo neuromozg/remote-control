@@ -297,6 +297,7 @@ if __name__ == '__main__':
 
         previousStates = [None, None, None, None, None, None, None]
         actualPackageNum = -1
+        connected = False   # метка первого подключения
         while True:
             try:
                 if (time.time() - timer) > attemptTime * 60:
@@ -309,6 +310,10 @@ if __name__ == '__main__':
                 nkey = data[1]
                 if nkey == key:
                     if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
+                        if not connected:
+                            config.beep()
+                            config.beep()
+                            connected = True
                         packageNum = data[2]
                         if packageNum > actualPackageNum:
                             actualPackageNum = packageNum
