@@ -178,9 +178,8 @@ def initializeAll():
         bucketPosition(0)
         try:
             if display is not None:
-                display.begin()
-                display.clear()
-                display.display()
+                display.fill(0)
+                display.show()
             else:
                 err("Дисплей робота не инициализирован")
         except:

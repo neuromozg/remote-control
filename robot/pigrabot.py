@@ -2,8 +2,11 @@ import threading
 import time
 
 try:
-    import Adafruit_SSD1306  # sudo pip3 install Adafruit-SSD1306
-    display = Adafruit_SSD1306.SSD1306_128_64(rst=None)  # создаем обект для работы c OLED дисплеем 128х64
+    from board import SCL, SDA
+    import busio
+    import adafruit_ssd1306
+    i2c = busio.I2C(SCL, SDA)
+    display = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
 except:
     display = None
 

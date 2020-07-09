@@ -375,12 +375,12 @@ if __name__ == '__main__':
                     draw.text((16, 0), "GAME", font=gameOverFont, fill=255)
                     draw.text((16, 32), "OVER", font=gameOverFont, fill=255)
                     display.image(image)
-                    display.display()
+                    display.show()
                     time.sleep(0.25)
                     break
 
                 display.image(image)
-                display.display()
+                display.show()
                 time.sleep(0.25)
 
 
