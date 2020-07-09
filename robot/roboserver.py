@@ -47,15 +47,30 @@ def crc16(data: bytes, poly=0x8408):
     return crc & 0xFFFF
 
 
+class DisplayStates:
+    NONE = 0    # дисплей не отрисовывает ничего
+    PRE_TIMER = 1   # дисплей отрисовывает таймер до начала подключения
+    PRE_ANIMATION = 2   # дисплей отрисовывает анимацию до начала подключения
+    SPEED = 3   # дисплей отрисовывает скорость
+    TIMER = 4   # дисплей отрисовывает основной таймер
+    ANIMATION = 5   # дисплей отрисовывает основную анимацию
+    EXIT = 6    # дисплей отрисовывает окончание попытки
+
+
 if __name__ == '__main__':
     global timer
+    global connected
+    connected = False  # метка первого подключения
     timer = time.time()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", help="Уровень дебага", type=int, choices=[0, 1, 2])
     parser.add_argument("-k", help="Ручной ввод ключа", type=int)
     parser.add_argument("--host", help="Ручной ввод хоста. Формат ввода ip:port", type=str)
     parser.add_argument("--info", help="Информационная строка вывода на дисплей", type=str)
     parser.add_argument("-t", help="Время попытки в минутах", type=int)
+    parser.add_argument("-p", help="Время на подготовку в минутах", type=int)
+    parser.add_argument("--preinfo", help="Информационная строка вывода на дисплей перед подключением", type=str)
     args = parser.parse_args()
     logger = robologger.robologger
     level = robologger.logging.INFO
@@ -135,6 +150,25 @@ if __name__ == '__main__':
             info = None
             logger.debug_0("Строка информации не задана")
 
+        global preinfo
+        if args.preinfo is not None:
+            try:
+                preinfo = args.preinfo
+                logger.debug_0("Строка информации (перед подключением) введена через модификатор: {preinfo}".format(preinfo=args.preinfo))
+            except Exception as e:
+                logger.error("Неверный формат введенной строки информации (перед подключением): {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной строки информации (перед подключением): {e}".format(e=e.__str__()))
+        elif config.__dict__.get("PREINFO") is not None:
+            try:
+                preinfo = config.PREINFO
+                logger.debug_0("Строка информации (перед подключением) взята из файла настроек config.py: {preinfo}".format(preinfo=config.PREINFO))
+            except Exception as e:
+                logger.error("Неверный формат введенной строки информации (перед подключением): {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной строки информации (перед подключением): {e}".format(e=e.__str__()))
+        else:
+            preinfo = None
+            logger.debug_0("Строка информации (перед подключением) не задана")
+
         global attemptTime
         if args.t is not None:
             try:
@@ -158,6 +192,29 @@ if __name__ == '__main__':
             logger.error("Время попытки не задано, введите его через модификатор [-t] или через файл настроек config.py")
             raise ValueError("Время попытки не задано")
 
+        global preparationTime
+        if args.p is not None:
+            try:
+                preparationTime = args.p
+                if (preparationTime < 0) or (preparationTime > 60):
+                    raise ValueError("Время для подготовки должно быть в диапазоне 0-60 минут")
+                logger.debug_0("Время для подготовки введено через модификатор: {p}".format(p=preparationTime))
+            except Exception as e:
+                logger.error("Неверный формат введенной времени для подготовки: {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной времени для подготовки: {e}".format(e=e.__str__()))
+        elif config.__dict__.get("PREPARATION_TIME") is not None:
+            try:
+                preparationTime = config.ATTEMPT_TIME
+                if (preparationTime < 0) or (preparationTime > 60):
+                    raise ValueError("Время для подготовки должно быть в диапазоне 0-60 минут")
+                logger.debug_0("Время для подготовки взято из файла настроек config.py: {p}".format(p=preparationTime))
+            except Exception as e:
+                logger.error("Неверный формат введенной времени для подготовки: {e}".format(e=e.__str__()))
+                raise ValueError("Неверный формат введенной времени для подготовки: {e}".format(e=e.__str__()))
+        else:
+            logger.error("Время для подготовки не задано, введите его через модификатор [-p] или через файл настроек config.py")
+            raise ValueError("Время для подготовки не задано")
+
         config.logger = logger
 
         try:
@@ -175,100 +232,152 @@ if __name__ == '__main__':
 
         global exitFlag
         global referenceSpeed, referenceSpeedFlag
+        global displayState
         exitFlag = False
         referenceSpeed = 0  # справочная скорость, для вывода на дисплей
         referenceSpeedFlag = False
+        displayState = DisplayStates.NONE
 
         def animate():
             """ Функция анимации текста и таймера """
-            global exitFlag, referenceSpeed, referenceSpeedFlag, info, timer, attemptTime
-            CHANGE_TEXT_TO_TIME_FLAG = False  # флаг переключения анимации текста на время
+            global timer, exitFlag, info, preinfo, attemptTime, displayState, referenceSpeedFlag, referenceSpeed, connected
             display = config.display
             width, height = display.width, display.height
             image = Image.new('1', (width, height))
-            font = ImageFont.truetype("arial.ttf", 52)
-            fontToSpeed = ImageFont.truetype("arial.ttf", 24)
-            fontToSpeed2 = ImageFont.truetype("arial.ttf", 35)
+            animationFont = ImageFont.truetype("arial.ttf", 52)
+            speedTexrFont = ImageFont.truetype("arial.ttf", 24)
+            speedFont = ImageFont.truetype("arial.ttf", 35)
+            gameOverFont = ImageFont.truetype("arial.ttf", 32)
             draw = ImageDraw.Draw(image)
-            text = info
-            if text is not None:
-                maxwidth, _ = draw.textsize(text, font=font)
-            zeroTime = timer  # время начала запуска программы
+            draw.rectangle((0, 0, width, height), outline=0, fill=0)
+            animationText = info
+            preanimationText = preinfo
+            if animationText is not None:
+                animationMaxWidth, _ = draw.textsize(animationText, font=animationFont)
+            if preanimationText is not None:
+                preanimationMaxWidth, _ = draw.textsize(preanimationText, font=animationFont)
+
+            changeTextToTimeFlag = False  # флаг переключения анимации текста на время
             animationTimer = 0  # таймер
             timetochange = 25  # время, которое должно пройти для смены режима анимации, в сек.
             timecounter = 0  # вспомогательная переменная, которая переключает режимы анимации
             lastcount = 0  # вспомогатеьная переменная для timecounter
             lastDrawnSecond = 0  # последняя отрисованная секунда, для оптимизации отрисовки времени
-            maxtime = attemptTime * 60  # максимальное время попытки, в секундах
-            offset = 0
+            preparationTimeSec = preparationTime * 60
+            attemptTimeSec = attemptTime * 60
+
+            speedCount = 0  # вспомогательная переменная для вывода скорости
+            offset = 0  # настройка анимации
             velocity = -15
             startpos = width
             pos = startpos
-            while not exitFlag:
-                animationTimer = time.time() - zeroTime
+
+            while True:
+                animationTimer = time.time() - timer
                 timecounter = animationTimer - lastcount
 
                 if timecounter > timetochange:
-                    CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
+                    changeTextToTimeFlag = not changeTextToTimeFlag
                     timecounter = 0
                     lastcount = animationTimer
                     pos = startpos
 
-                if referenceSpeedFlag and (maxtime - animationTimer) > 7:     # вклиниваем показ скорости в любой момент времени, при ее изменении
-                    count = 0
-                    while count < 4:
-                        animationTimer = time.time() - zeroTime
-                        if exitFlag:
-                            break
-                        if referenceSpeedFlag:
-                            referenceSpeedFlag = False
-                            count = 0
-                        if (maxtime - animationTimer) < 5:
-                            break
-                        draw.rectangle((0, 0, width, height), outline=0, fill=0)
-                        draw.text((0, 0), "СКОРОСТЬ:", font=fontToSpeed, fill=255)
-                        draw.text((30, 27), "{0}%".format(referenceSpeed), font=fontToSpeed2, fill=255)
-                        count += 1
-                        display.image(image)
-                        display.display()
-                        time.sleep(0.3)
+                if exitFlag:
+                    displayState = DisplayStates.EXIT
+                elif referenceSpeedFlag and connected and (attemptTimeSec - animationTimer) > 7:
+                    speedCount = 0
+                    referenceSpeedFlag = False
+                    displayState = DisplayStates.SPEED
+                elif not connected and not changeTextToTimeFlag:
+                    displayState = DisplayStates.PRE_ANIMATION
+                elif not connected and changeTextToTimeFlag:
+                    displayState = DisplayStates.PRE_TIMER
+                elif connected and not changeTextToTimeFlag:
+                    displayState = DisplayStates.ANIMATION
+                elif connected and changeTextToTimeFlag:
+                    displayState = DisplayStates.TIMER
+                else:
+                    displayState = DisplayStates.NONE
 
-                elif not CHANGE_TEXT_TO_TIME_FLAG:
-                    if text is None:
-                        CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
-                        continue
-                    if (maxtime - animationTimer) < 15:
-                        CHANGE_TEXT_TO_TIME_FLAG = not CHANGE_TEXT_TO_TIME_FLAG
+                if displayState == DisplayStates.NONE:
+                    time.sleep(0.25)
+                    continue
+
+                elif displayState == DisplayStates.PRE_TIMER:
+                    if int(animationTimer) != lastDrawnSecond:
+                        draw.rectangle((0, 0, width, height), outline=0, fill=0)
+                        invtime = preparationTimeSec - animationTimer
+                        if invtime < 0:
+                            invtime = 0
+                        draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=animationFont, fill=255)
+                        lastDrawnSecond = int(animationTimer)
+
+                elif displayState == DisplayStates.PRE_ANIMATION:
+                    if (preanimationText is None) or (preparationTimeSec - animationTimer) < 15:
+                        changeTextToTimeFlag = not changeTextToTimeFlag
                         continue
                     draw.rectangle((0, 0, width, height), outline=0, fill=0)
                     x = pos
-                    for i, c in enumerate(text):
+                    for i, c in enumerate(preanimationText):
                         if x > width:
                             break
                         if x < -10:
-                            char_width, char_height = draw.textsize(c, font=font)
+                            char_width, char_height = draw.textsize(c, font=animationFont)
                             x += char_width
                             continue
                         y = offset
-                        draw.text((x, y), c, font=font, fill=255)
-                        char_width, char_height = draw.textsize(c, font=font)
+                        draw.text((x, y), c, font=animationFont, fill=255)
+                        char_width, char_height = draw.textsize(c, font=animationFont)
                         x += char_width
                     pos += velocity
-                    if pos < -maxwidth:
+                    if pos < -preanimationMaxWidth:
                         pos = startpos
-                else:
+
+                elif displayState == DisplayStates.SPEED:
+                    if (speedCount > 4) or (attemptTimeSec - animationTimer) < 5:
+                        displayState = DisplayStates.ANIMATION
+                    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+                    draw.text((0, 0), "СКОРОСТЬ:", font=speedTexrFont, fill=255)
+                    draw.text((30, 27), "{0}%".format(referenceSpeed), font=speedFont, fill=255)
+                    speedCount += 1
+
+                elif displayState == DisplayStates.TIMER:
                     if int(animationTimer) != lastDrawnSecond:
                         draw.rectangle((0, 0, width, height), outline=0, fill=0)
-                        invtime = maxtime - animationTimer
+                        invtime = attemptTimeSec - animationTimer
                         if invtime < 0:
-                            font = ImageFont.truetype("arial.ttf", 32)
-                            draw.text((16, 0), "GAME", font=font, fill=255)
-                            draw.text((16, 32), "OVER", font=font, fill=255)
-                            display.image(image)
-                            display.display()
-                            break
-                        draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=font, fill=255)
+                            invtime = 0
+                        draw.text((0, 0), "%02d:%02d" % (int(invtime // 60), int(invtime % 60)), font=animationFont, fill=255)
                         lastDrawnSecond = int(animationTimer)
+
+                elif displayState == DisplayStates.ANIMATION:
+                    if (animationText is None) or (attemptTimeSec - animationTimer) < 15:
+                        changeTextToTimeFlag = not changeTextToTimeFlag
+                        continue
+                    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+                    x = pos
+                    for i, c in enumerate(animationText):
+                        if x > width:
+                            break
+                        if x < -10:
+                            char_width, char_height = draw.textsize(c, font=animationFont)
+                            x += char_width
+                            continue
+                        y = offset
+                        draw.text((x, y), c, font=animationFont, fill=255)
+                        char_width, char_height = draw.textsize(c, font=animationFont)
+                        x += char_width
+                    pos += velocity
+                    if pos < -animationMaxWidth:
+                        pos = startpos
+
+                elif displayState == DisplayStates.EXIT:
+                    draw.text((16, 0), "GAME", font=gameOverFont, fill=255)
+                    draw.text((16, 32), "OVER", font=gameOverFont, fill=255)
+                    display.image(image)
+                    display.display()
+                    time.sleep(0.25)
+                    break
 
                 display.image(image)
                 display.display()
@@ -297,10 +406,14 @@ if __name__ == '__main__':
 
         previousStates = [None, None, None, None, None, None, None]
         actualPackageNum = -1
-        connected = False   # метка первого подключения
+        timer = time.time()
         while True:
             try:
-                if (time.time() - timer) > attemptTime * 60:
+                if not connected:   # если еще не было подключения
+                    if (time.time() - timer) > preparationTime * 60:
+                        logger.info("Попытки подключения не было, произвожу отключение сервера...")
+                        break
+                elif (time.time() - timer) > attemptTime * 60:
                     logger.info("Попытка закончена, произвожу отключение сервера...")
                     break
                 rawdata, addr = sock.recvfrom(1024)  # buffer size is 1024 bytes
@@ -312,8 +425,8 @@ if __name__ == '__main__':
                     if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
                         if not connected:
                             config.beep()
-                            config.beep()
                             connected = True
+                            timer = time.time()
                         packageNum = data[2]
                         if packageNum > actualPackageNum:
                             actualPackageNum = packageNum
@@ -352,27 +465,18 @@ if __name__ == '__main__':
             except Exception as e:
                 logger.error("Ошибка при приеме пакета: {e}".format(e=e))
 
+        exitFlag = True
         config.beep()
         time.sleep(0.1)
         config.release()
-        logger.info("Сервер успешно завершил свою работу")
         time.sleep(1)
+        logger.info("Сервер успешно завершил свою работу")
         sys.exit()
     except KeyboardInterrupt:
         exitFlag = True
-        display = config.display
-        width, height = display.width, display.height
-        image = Image.new('1', (width, height))
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype("arial.ttf", 32)
-        draw.text((16, 0), "GAME", font=font, fill=255)
-        draw.text((16, 32), "OVER", font=font, fill=255)
-        display.image(image)
-        time.sleep(0.5)
-        display.display()
         config.beep()
         time.sleep(0.1)
         config.release()
-        logger.info("Сервер успешно завершил свою работу")
         time.sleep(1)
+        logger.info("Сервер успешно завершил свою работу")
         sys.exit()

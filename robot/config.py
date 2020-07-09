@@ -9,6 +9,8 @@ SELF_HOST = "10.1.0.75:random"
 # KEY = 6006    # если закомментировано - генерируется автоматически
 INFO = "КУБОК РТК"
 ATTEMPT_TIME = 12
+PREINFO = "ОЖИДАНИЕ ПОДКЛЮЧЕНИЯ"
+PREPARATION_TIME = 3
 
 bus = None
 robot = None
