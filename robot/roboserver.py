@@ -204,7 +204,7 @@ if __name__ == '__main__':
                 raise ValueError("Неверный формат введенной времени для подготовки: {e}".format(e=e.__str__()))
         elif config.__dict__.get("PREPARATION_TIME") is not None:
             try:
-                preparationTime = config.ATTEMPT_TIME
+                preparationTime = config.PREPARATION_TIME
                 if (preparationTime < 0) or (preparationTime > 60):
                     raise ValueError("Время для подготовки должно быть в диапазоне 0-60 минут")
                 logger.debug_0("Время для подготовки взято из файла настроек config.py: {p}".format(p=preparationTime))
@@ -372,6 +372,7 @@ if __name__ == '__main__':
                         pos = startpos
 
                 elif displayState == DisplayStates.EXIT:
+                    draw.rectangle((0, 0, width, height), outline=0, fill=0)
                     draw.text((16, 0), "GAME", font=gameOverFont, fill=255)
                     draw.text((16, 32), "OVER", font=gameOverFont, fill=255)
                     display.image(image)
@@ -407,6 +408,7 @@ if __name__ == '__main__':
         previousStates = [None, None, None, None, None, None, None]
         actualPackageNum = -1
         timer = time.time()
+        logger.info("Ожидание подключения участника, запуск таймера подготовки")
         while True:
             try:
                 if not connected:   # если еще не было подключения
@@ -424,6 +426,7 @@ if __name__ == '__main__':
                 if nkey == key:
                     if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
                         if not connected:
+                            logger.info("Участник подключен, запускается основной таймер")
                             config.beep()
                             connected = True
                             timer = time.time()
