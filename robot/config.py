@@ -19,7 +19,7 @@ display = pigrabot.display
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
-# plowStates = [middleServoPos, 70]
+gunStates = [middleServoPos, middleServoPos + 5]    # for tests
 plantStates = [60, 115]
 grabLimits = [20, 80]
 bucketLimits = [0, 100]
@@ -28,7 +28,8 @@ ALFA = 0.575
 moveSpeed = 0
 rotateSpeed = 0
 
-plantActivateFlag = False  # флаг - активирована ли посадка
+plantActivateFlag = False   # флаг - активирована ли посадка
+gunActivateFlag = False     # флаг - активирована ли стрелялка
 
 logger = None
 
@@ -84,13 +85,30 @@ def rotate(speed):
         err("Ошибка управления: command: rotate(): {e}".format(e=e))
 
 
-def changePlowState(state):
+def activateGun(activator):
+    global gunActivateFlag
+
+    def _actGun():
+        global gunActivateFlag
+        try:
+            robot.setServo3(gunStates[1])
+            time.sleep(1.5)
+            robot.setServo3(gunStates[0])
+            time.sleep(1)
+            gunActivateFlag = False
+            log("Стрелялка деактивирована")
+        except Exception as e:
+            gunActivateFlag = False
+            err("Ошибка активации Стрелялки: {e}".format(e=e))
+
     try:
-        # robot.setServo1(plowStates[int(state)])
-        pass
-        log("command: changePlowState({state})".format(state=state))
+        log("command: activateGun({activator})".format(activator=activator))
+        if activator and not gunActivateFlag:
+            threading.Thread(target=_actGun, daemon=True).start()
+            gunActivateFlag = True
+            log("Стрелялка активирована")
     except Exception as e:
-        err("Ошибка управления: command: changePlowState(): {e}".format(e=e))
+        err("Ошибка управления: command: activateGun(): {e}".format(e=e))
 
 
 def activatePlant(activator):

@@ -449,7 +449,7 @@ if __name__ == '__main__':
                         if data[3] != previousStates[3]:
                             config.grabPosition(data[3])
                         if data[4] != previousStates[4]:
-                            config.changePlowState(data[4])
+                            config.activateGun(data[4])
                         if data[5] != previousStates[5]:
                             config.activatePlant(data[5])
                         if data[6] != previousStates[6]:
