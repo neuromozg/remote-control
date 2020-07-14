@@ -44,8 +44,9 @@ class Robot:
     def rotate(self, speed):
         print("rotate: ", speed)
 
-    def changePlowState(self, state):
-        print("plow state: ", state)
+    def activateGun(self, activator):
+        if activator:
+            print("gun activated")
 
     def activatePlant(self, activator):
         if activator:
@@ -87,7 +88,7 @@ if __name__ == '__main__':
                     if data[3] != previousStates[3]:
                         robot.grabPosition(data[3])
                     if data[4] != previousStates[4]:
-                        robot.changePlowState(data[4])
+                        robot.activateGun(data[4])
                     if data[5] != previousStates[5]:
                         robot.activatePlant(data[5])
                     if data[6] != previousStates[6]:

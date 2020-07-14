@@ -9,6 +9,7 @@ import time
 """ Для того, чтобы единожды задать ip и порт, расскоментируйте следующие строки и запишите в них
  правильные значения ip и порта """
 IP = "188.68.186.139"
+# IP = "127.0.0.1"
 # PORT = 5005
 
 """ Управляющие клавиши """
@@ -19,7 +20,7 @@ controlKeyMap = {
     "rotateRight": ["d", "D", "в", "В"],
     "addSpeed": ["+", "=", "]", "}", "Ъ", "ъ"],
     "subSpeed": ["_", "-", "[", "{", "Х", "х"],
-    "changePlowState": ["J", "j", "о", "О"],
+    "changeGunStateFlag": [Key.enter],
     "changePlantStateFlag": [Key.space],
     "bucketMoveUp": ["P", "p", "з", "З"],
     "bucketMoveDown": ["L", "l", "д", "Д"],
@@ -37,6 +38,7 @@ def info():
     print("\t- - slow down speed")
     print("\t+ - speed up")
     print("\tSpace - plant potatoes")
+    print("\tEnter - shot")
     print("\tP - bucket move up (hold on)")
     print("\tL - bucket move down (hold on)")
     print("\tK - grip a grab  (hold on)")
@@ -90,14 +92,14 @@ class RemoteRobot:
         #   || (H) uint16 - package number [0, 0xFFFF]  ||->
         # ->|| (b) int8 - move speed [-100,100]         || (b) int8 - rotate speed [-100, 100]    ||->
         # ->|| (b) int8 - bucket position [-100,100]    || (b) int8 - grab position [-100, 100]   ||->
-        # ->|| (?) bool - plow state                    || (?) bool - plant state flag            ||->
+        # ->|| (?) bool - gun state flag                || (?) bool - plant state flag            ||->
         # ->|| (H) uint8 - display abs speed flag       ||
         self.__isConnected = False  # флаг подключения
         self.__speed = 80  # диапазон - [60, 100]
         self.__speedAddStep = 10  # шаг с которым может меняться скорость
         self.__moveDirection = 0  # Направление движения робота: -1, 0, 1
         self.__rotateDirection = 0  # Направление поворота робота: -1, 0, 1
-        self.__plowState = False  # Состояние плуга: False - убран, True - опущен
+        self.__gunStateFlag = False  # Флаг активации стрелялки при True - активируется, False - сброс флага
         self.__plantStateFlag = False  # Флаг активации диспенсора при True - активируется, False - сброс флага
         self.__bucketPosition = 0  # Позиция ковша, диапазон - [-100, 100]
         self.__grabPosition = 0  # Позиция схвата, диапазон - [-100, 100]
@@ -145,7 +147,7 @@ class RemoteRobot:
                                        packageNum,
                                        moveSpeed, rotateSpeed,
                                        self.__bucketPosition, self.__grabPosition,
-                                       self.__plowState, self.__plantStateFlag,
+                                       self.__gunStateFlag, self.__plantStateFlag,
                                        speedFlag)  # упаковка параметров управления
                     crc = struct.pack('=H', crc16(data))  # избыточный код
                     key = struct.pack('=H', self.__key)
@@ -184,6 +186,8 @@ class RemoteRobot:
 
                 elif key in controlKeyMap["changePlantStateFlag"]:
                     self.__plantStateFlag = True  # при зажатой клавише всегда отправляется True
+                elif key in controlKeyMap["changeGunStateFlag"]:
+                    self.__gunStateFlag = True  # при зажатой клавише всегда отправляется True
 
                 elif key in controlKeyMap["bucketMoveUp"]:
                     self.__bucketPosition = min(max(-100, self.__bucketPosition + self.__positionChangeStep), 100)
@@ -217,6 +221,8 @@ class RemoteRobot:
 
                 elif key in controlKeyMap["changePlantStateFlag"]:
                     self.__plantStateFlag = False
+                elif key in controlKeyMap["changeGunStateFlag"]:
+                    self.__gunStateFlag = False
 
             except:
                 pass
@@ -228,7 +234,7 @@ class RemoteRobot:
 
 
 if __name__ == '__main__':
-    print("AgroBot remote control v1.0b")
+    print("Online-Cup remote control v1.1b")
     robot = RemoteRobot()
     try:
         while True:
@@ -244,15 +250,16 @@ if __name__ == '__main__':
                         port = PORT
                     else:
                         print("Enter the port: ")
-                        port = int(input().replace(' ', ''))
+                        port = input().replace(' ', '')
+
+                    if checkHost((ip, port)) is False:
+                        continue
 
                     print("Enter the key: ")
                     key = int(input().replace(' ', ''))
                     if (key > 0xFFFF) or (key < 0):
                         raise ValueError("Invalid key format")
 
-                    if checkHost((ip, port)) is False:
-                        continue
                     robot.connect(ip, int(port), key)
                     info()
                 except Exception as e:
