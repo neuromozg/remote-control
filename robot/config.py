@@ -19,10 +19,10 @@ display = pigrabot.display
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
-gunStates = [middleServoPos, middleServoPos + 5]    # for tests
+gunStates = [0, 90]    # for tests
 plantStates = [60, 115]
 grabLimits = [20, 80]
-bucketLimits = [0, 100]
+bucketLimits = [35, 100]
 
 ALFA = 0.575
 moveSpeed = 0
@@ -91,9 +91,9 @@ def activateGun(activator):
     def _actGun():
         global gunActivateFlag
         try:
-            robot.setServo3(gunStates[1])
-            time.sleep(1.5)
             robot.setServo3(gunStates[0])
+            time.sleep(1)
+            robot.setServo3(gunStates[1])
             time.sleep(1)
             gunActivateFlag = False
             log("Стрелялка деактивирована")
