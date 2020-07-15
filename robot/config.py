@@ -24,6 +24,9 @@ plantStates = [60, 115]
 grabLimits = [20, 80]
 bucketLimits = [35, 100]
 
+bucketShotState = 55
+grabShotState = 75
+
 ALFA = 0.575
 moveSpeed = 0
 rotateSpeed = 0
@@ -91,6 +94,11 @@ def activateGun(activator):
     def _actGun():
         global gunActivateFlag
         try:
+            log("Приведение ковша и схвата в положение для стрельбы")
+            robot.setServo1(grabShotState)
+            time.sleep(0.2)
+            robot.setServo2(bucketShotState)
+            time.sleep(0.4)
             robot.setServo3(gunStates[0])
             time.sleep(1)
             robot.setServo3(gunStates[1])
