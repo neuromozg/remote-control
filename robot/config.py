@@ -53,6 +53,7 @@ def vectorMove():
     global moveSpeed
     global rotateSpeed
 
+    moveSpeed = - moveSpeed
     if moveSpeed == 0:
         speedL = -rotateSpeed
         speedR = rotateSpeed
