@@ -19,8 +19,8 @@ display = pigrabot.display
 servoPosLen = 125
 middleServoPos = servoPosLen // 2
 
-gunStates = [0, 90]    # for tests
-plantStates = [60, 115]
+gunStates = [0, 95]    # for tests
+plantStates = [40, 100]
 grabLimits = [20, 80]
 bucketLimits = [35, 100]
 
@@ -95,9 +95,9 @@ def activateGun(activator):
         global gunActivateFlag
         try:
             log("Приведение ковша и схвата в положение для стрельбы")
-            robot.setServo1(grabShotState)
+            robot.setServo0(grabShotState)
             time.sleep(0.2)
-            robot.setServo2(bucketShotState)
+            robot.setServo1(bucketShotState)
             time.sleep(0.4)
             robot.setServo3(gunStates[0])
             time.sleep(1)
@@ -125,9 +125,9 @@ def activatePlant(activator):
     def _actPlant():
         global plantActivateFlag
         try:
-            robot.setServo0(plantStates[1])
+            robot.setServo2(plantStates[1])
             time.sleep(2)
-            robot.setServo0(plantStates[0])
+            robot.setServo2(plantStates[0])
             time.sleep(1)
             plantActivateFlag = False
             log("Посадка деактивирована")
@@ -153,7 +153,7 @@ def bucketPosition(position):
         position = int(((position / 200) + 0.5) * bucketPosLen + bucketLimits[0])  # [-100, 100] -> [0, 1] -> [bucketLimits[0], bucketLimits[1]]
         position = min(max(bucketLimits[0], position), bucketLimits[1])
         log("command: bucketPosition({pos}):\tposition convert to pwm({pwm})".format(pos=pos, pwm=position))
-        robot.setServo2(position)
+        robot.setServo1(position)
     except Exception as e:
         err("Ошибка управления: command: bucketPosition(): {e}".format(e=e))
 
@@ -166,7 +166,7 @@ def grabPosition(position):
         position = int(((position / 200) + 0.5) * grabPosLen + grabLimits[0])  # [-100, 100] -> [0, 1] -> [grabLimits[0], grabLimits[1]]
         position = min(max(grabLimits[0], position), grabLimits[1])
         log("command: grabPosition({pos}):\tposition convert to pwm({pwm})".format(pos=pos, pwm=position))
-        robot.setServo1(position)
+        robot.setServo0(position)
     except Exception as e:
         err("Ошибка управления: command: grabPosition(): {e}".format(e=e))
 
