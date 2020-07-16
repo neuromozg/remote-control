@@ -430,11 +430,7 @@ if __name__ == '__main__':
                             config.robot.online = True
                             time.sleep(0.1)
                             config.beep()
-                            time.sleep(0.1)
-                            config.setPlant(int(config.middleServoPos))
-                            time.sleep(0.1)
-                            config.setPlant(config.plantStates[0])
-                            time.sleep(0.1)
+                            time.sleep(0.5)
                             connected = True
                             timer = time.time()
                         packageNum = data[2]
