@@ -149,6 +149,9 @@ def activatePlant(activator):
             threading.Thread(target=_actPlant, daemon=True).start()
             plantActivateFlag = True
             log("Посадка активирована")
+        elif not plantActivateFlag:
+            setPlant(plantStates[0])
+            time.sleep(0.2)
     except Exception as e:
         err("Ошибка управления: command: activatePlant(): {e}".format(e=e))
 
