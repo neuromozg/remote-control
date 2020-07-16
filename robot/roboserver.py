@@ -428,6 +428,7 @@ if __name__ == '__main__':
                         if not connected:
                             logger.info("Участник подключен, запускается основной таймер")
                             config.beep()
+                            config.setPlant(config.plantStates[0])
                             connected = True
                             timer = time.time()
                         packageNum = data[2]

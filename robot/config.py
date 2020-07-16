@@ -119,15 +119,23 @@ def activateGun(activator):
         err("Ошибка управления: command: activateGun(): {e}".format(e=e))
 
 
+def setPlant(position):
+    try:
+        log("command: setPlant({pos})".format(pos=position))
+        robot.setServo2(position)
+    except Exception as e:
+        err("Ошибка управления: command: setPlant(): {e}".format(e=e))
+
+
 def activatePlant(activator):
     global plantActivateFlag
 
     def _actPlant():
         global plantActivateFlag
         try:
-            robot.setServo2(plantStates[1])
+            setPlant(plantStates[1])
             time.sleep(2)
-            robot.setServo2(plantStates[0])
+            setPlant(plantStates[0])
             time.sleep(1)
             plantActivateFlag = False
             log("Посадка деактивирована")
