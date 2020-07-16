@@ -53,19 +53,18 @@ def vectorMove():
     global moveSpeed
     global rotateSpeed
 
-    moveSpeed = - moveSpeed
     if moveSpeed == 0:
-        speedL = -rotateSpeed
-        speedR = rotateSpeed
+        speedL = rotateSpeed
+        speedR = -rotateSpeed
     elif rotateSpeed == 0:
         speedL = moveSpeed
         speedR = moveSpeed
     else:
-        speedL = ALFA*moveSpeed - (1-ALFA)*rotateSpeed
-        speedR = ALFA*moveSpeed + (1-ALFA)*rotateSpeed
+        speedL = ALFA*moveSpeed + (1-ALFA)*rotateSpeed
+        speedR = ALFA*moveSpeed - (1-ALFA)*rotateSpeed
 
-    robot.setPwm0(-int(speedL * 2.55))  # [-100;100] -> [-255;255]
-    robot.setPwm1(int(speedR * 2.55))  # [-100;100] -> [-255;255]
+    robot.setPwm0(int(speedL * 2.55))  # [-100;100] -> [-255;255]
+    robot.setPwm1(-int(speedR * 2.55))  # [-100;100] -> [-255;255]
     log("\tvector move: speedL({speedL}), speedR({speedR})".format(speedL=speedL, speedR=speedR))
 
 
