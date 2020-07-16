@@ -427,6 +427,8 @@ if __name__ == '__main__':
                     if crc == crc16(rawdata[struct.calcsize(__headFormat):]):
                         if not connected:
                             logger.info("Участник подключен, запускается основной таймер")
+                            config.robot.online = True
+                            time.sleep(0.1)
                             config.beep()
                             time.sleep(0.1)
                             config.setPlant(int(config.middleServoPos))
@@ -443,8 +445,8 @@ if __name__ == '__main__':
                                 "Старый пакет: " + "Package: crc: {0}, key: {1}, number: {2}, data: {3}. Актуальный номер пакета: {4}".format(
                                     *data[:3], data[3:], actualPackageNum))
 
-                        data = data[3:]
                         config.robot.online = True
+                        data = data[3:]
                         if data[0] != previousStates[0]:
                             config.move(data[0])
                         if data[1] != previousStates[1]:
