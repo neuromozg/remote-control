@@ -26,12 +26,7 @@ class FrontCamFactory(GstRtspServer.RTSPMediaFactory):
 		GstRtspServer.RTSPMediaFactory.__init__(self)
 
 	def do_create_element(self, url):
-		s_src = "v4l2src device=/dev/video4 ! video/x-h264,width=640,height=360,framerate=10/1"
-		s_h264 = "h264parse"
-		a_src = "audiotestsrc ! amrnbenc ! rtpamrpay"
-		pipeline_str = "( {s_src} ! queue max-size-buffers=1 name=q_enc ! {s_h264} ! rtph264pay name=pay0 pt=96 )".format(**locals())
-		pipeline_str = "( v4l2src device=/dev/video4 ! video/x-h264,width=640,height=360,framerate=10/1 ! h264parse ! rtph264pay name=pay0 pt=96 audiotestsrc is-live=1 ! audio/x-raw,rate=8000 ! alawenc ! rtppcmapay name=pay1 pt=97 )"
-		pipeline_str = "( v4l2src device=/dev/video4 ! video/x-raw, width=640, height=360, framerate=10/1, pixel-aspect-ratio=1/1 ! \
+		pipeline_str = "( v4l2src device=/dev/video2 ! video/x-raw, width=640, height=360, framerate=10/1, pixel-aspect-ratio=1/1 ! \
 				gdkpixbufoverlay location=aim2.png offset-x=265 offset-y=90 overlay-height=0 overlay-width=0 ! videorate ! \
 				v4l2h264enc ! rtph264pay name=pay0 pt=96 \
 				alsasrc device=plughw:1,0 ! audio/x-raw, rate=16000, channels=1 ! audiochebband mode=band-pass lower-frequency=1000 upper-frequency=4000 type=2 ! audioconvert ! opusenc ! rtpopuspay name=pay1 )"
@@ -44,9 +39,8 @@ class PotatoCamFactory(GstRtspServer.RTSPMediaFactory):
                 GstRtspServer.RTSPMediaFactory.__init__(self)
 
         def do_create_element(self, url):
-                pipeline_str = "( v4l2src device=/dev/video0 ! video/x-raw, width=320, height=240, framerate=10/1, pixel-aspect-ratio=1/1 ! \
-                                gdkpixbufoverlay location=aim2.png offset-x=78 offset-y=20 overlay-height=0 overlay-width=0 ! videorate ! \
-				v4l2h264enc ! rtph264pay name=pay0 pt=96 )"
+                pipeline_str = "( v4l2src device=/dev/video0 ! image/jpeg, width=320, height=240, framerate=20/1, pixel-aspect-ratio=1/1 ! \
+                                jpegparse ! rtpjpegpay name=pay0 pt=96 )"
                 print(pipeline_str)
                 return Gst.parse_launch(pipeline_str)
 
