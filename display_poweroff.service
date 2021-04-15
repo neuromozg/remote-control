@@ -1,0 +1,16 @@
+[Unit]
+Description=Draw display "POWER OFF"
+DefaultDependencies=no
+Before=final.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/powerOff.py
+WorkingDirectory=/home/pi
+User=pi
+Group=dialout
+TimeoutStartSec=0
+
+[Install]
+WantedBy=final.target
+
