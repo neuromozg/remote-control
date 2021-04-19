@@ -12,8 +12,7 @@ https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2
 Перезагрузить систему
 
 Обновить пакеты
-```$ sudo apt update```
-```$ sudo apt upgrade```
+```$ sudo apt update && sudo apt upgrade -y```
 
 Пакеты необходимые для работы приложения на роботе
 
