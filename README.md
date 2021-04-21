@@ -30,4 +30,4 @@ https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2
 ```$ python3 roboserver.py [параметры]```  
 
 Пример
-```$ python3 roboserver.py -v 1 --host "10.1.0.19:random" --info "TEST" --preinfo "ЖДУ ПОДКЛЮЧЕНИЯ" -p 10 -t 30
+```$ python3 roboserver.py -v 1 --host "10.1.0.19:random" --info "TEST" --preinfo "ЖДУ ПОДКЛЮЧЕНИЯ" -p 10 -t 30```
