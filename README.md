@@ -26,5 +26,5 @@ https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2
 Запуск RTSP сервера трансляции с видеокамер робота  
 ```$ python3 rtsp_server.py```
 
-Запуск сервера упралвения роботом
+Запуск сервера управления роботом  
 ```$ python3 roboserver.py [параметры]```
