@@ -4,10 +4,10 @@ https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2
 Для корректной работы с необходимо настроить ОС Raspbian запустив  
 ```$ sudo raspi-config```  
 В меню выбрать 
-`Interfacing Options -> SSH -> Yes`
-`Interfacing Options -> I2C -> Yes`
-`Interfacing Options -> Camera -> Yes`
-`Advanced Options -> Expand file system -> Yes`
+`Interfacing Options -> SSH -> Yes`  
+`Interfacing Options -> I2C -> Yes`  
+`Interfacing Options -> Camera -> Yes`  
+`Advanced Options -> Expand file system -> Yes`  
 
 Перезагрузить систему
 
